@@ -1,0 +1,4 @@
+# Ignore compiled source code #
+*.class
+Lexer.java
+*~

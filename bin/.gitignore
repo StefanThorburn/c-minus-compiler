@@ -1,0 +1,5 @@
+# Need this directory to exist in git, but files inside to be ignored
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
