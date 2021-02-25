@@ -1,4 +1,6 @@
 # Ignore compiled source code #
 *.class
 Lexer.java
+parser.java
+sym.java
 *~
