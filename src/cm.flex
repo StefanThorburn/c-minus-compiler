@@ -86,8 +86,16 @@ number = {digit}+
    Z, a and z, or an underscore followed by zero or more letters
    between A and Z, a and z, zero and nine, or an underscore. */
 letter = [a-zA-Z]
-identifier = {letter}+
-   
+identifier = (_|{letter})(_|{letter}|{digit})*
+
+//Comments in C minus are any sequence of characters between /* and */
+//a comment error is a comment which has the sequence /*...*/...*/ (ie more than one comment ending)
+//any other comment format is acceptable (including multiple comment openings)
+//commentError = \/\*.*\*\/.*\*\/
+commentError = "'/*"(.|{WhiteSpace})*"*/"(.|{WhiteSpace})*"*/"
+//comment = \/\*.*\*\/
+comment = "/*"(.|{WhiteSpace})*"*/"
+
 %%
 /* ------------------------Lexical Rules Section---------------------- */
    
@@ -95,7 +103,45 @@ identifier = {letter}+
    This section contains regular expressions and actions, i.e. Java
    code, that will be executed when the scanner matches the associated
    regular expression. */
-   
+
+// Keywords   
+"if"              { return symbol(sym.IF); }
+"else"            { return symbol(sym.ELSE); }
+"int"             { return symbol(sym.INT); }
+"return"          { return symbol(sym.RETURN); }
+"void"            { return symbol(sym.VOID); }
+"while"           { return symbol(sym.WHILE); }
+// Special symbols
+"+"               { return symbol(sym.PLUS); }
+"-"               { return symbol(sym.MINUS); }
+"*"               { return symbol(sym.TIMES); }
+"/"               { return symbol(sym.DIVIDE); }
+"<"               { return symbol(sym.LT); }
+"<="              { return symbol(sym.LE); }
+">"               { return symbol(sym.GT); }
+">="              { return symbol(sym.GE); }
+"=="              { return symbol(sym.EQ); }
+"!="              { return symbol(sym.NE); }
+"="               { return symbol(sym.ASSIGN); }
+";"               { return symbol(sym.SEMICOLON); }
+","               { return symbol(sym.COMMA); }
+"("               { return symbol(sym.LPAREN); }
+")"               { return symbol(sym.RPAREN); }
+"["               { return symbol(sym.LSQUARE); }
+"]"               { return symbol(sym.RSQUARE); }
+"{"               { return symbol(sym.LCURLY); }
+"}"               { return symbol(sym.RCURLY); }
+// Other stuff
+{number}          { return symbol(sym.NUM); }
+{identifier}      { return symbol(sym.ID); }
+{WhiteSpace}+     { /* skip whitespace */ }
+// Comments
+{commentError}    { return symbol(sym.ERROR); }
+{comment}         { /* skip comments */ }
+// Anything else is an error
+.                 { return symbol(sym.ERROR); }
+
+/*
 "if"               { return symbol(sym.IF); }
 "then"             { return symbol(sym.THEN); }
 "else"             { return symbol(sym.ELSE); }
@@ -117,6 +163,7 @@ identifier = {letter}+
 ";"                { return symbol(sym.SEMI); }
 {number}           { return symbol(sym.NUM, yytext()); }
 {identifier}       { return symbol(sym.ID, yytext()); }
-{WhiteSpace}+      { /* skip whitespace */ }   
-"{"[^\}]*"}"       { /* skip comments */ }
-.                  { return symbol(sym.ERROR); }
+*/
+//{WhiteSpace}+      { /* skip whitespace */ }   
+//"{"[^\}]*"}"       { /* skip comments */ }
+//.                  { return symbol(sym.ERROR); }

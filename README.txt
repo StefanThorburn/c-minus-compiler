@@ -2,7 +2,7 @@ CIS4650 W21 Compiler's project
 Prabhleen Ratra & Stefan Thorburn
 
 ***** CHECKPOINT ONE *****
-Our scanner uses the provided sample scanner as a base
+Our scanner uses the provided sample scanner and parser as a base
 
 
 *** RUNNING ***
