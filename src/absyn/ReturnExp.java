@@ -8,4 +8,8 @@ public class ReturnExp extends Exp {
         this.col = col;
         this.exp = exp;
     }
+
+    public void accept( AbsynVisitor visitor, int level ) {
+        //visitor.visit( this, level );
+    }
 }

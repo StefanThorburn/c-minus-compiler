@@ -10,4 +10,8 @@ public class CompoundExp extends Exp {
         this.decs = decs;
         this.exps = exps;
     }
+
+    public void accept( AbsynVisitor visitor, int level ) {
+        //visitor.visit( this, level );
+    }
 }
