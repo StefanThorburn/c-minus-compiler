@@ -70,108 +70,327 @@ parser code {:
    
    
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
-   
+
+/*
 terminal IF, THEN, ELSE, END, REPEAT, UNTIL, READ, WRITE;
 terminal ASSIGN, EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
 terminal String ID, NUM;
 terminal ERROR;
-   
+
 non terminal Exp program1;
 non terminal ExpList program, stmt_seq;
 non terminal Exp stmt, if_stmt, repeat_stmt, assign_stmt, read_stmt, write_stmt;
-non terminal Exp exp, simple_exp, term, factor;   
+non terminal Exp exp, simple_exp, term, factor; 
+*/
+
+terminal IF, ELSE, WHILE, RETURN, VOID, INT;
+terminal ASSIGN, EQ, NE, LT, LE, GT, GE, FE, PLUS, MINUS, MUL, DIV;
+terminal LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, SEMI, COMMA;
+terminal String ID, NUM;
+terminal ERROR;
+   
+non terminal DecList program;
+non terminal DecList decList;
+non terminal Dec dec;
+non terminal VarDec varDec;
+non terminal NameTy nameTy;
+non terminal FunctionDec funDec;
+non terminal VarDecList params, paramList, locDec;
+non terminal VarDec param;
+non terminal CompoundExp compStmt;
+
+non terminal ExpList args, argList, stmtList;
+non terminal Exp exp, stmt, expStmt, addExp, simpExp, term, factor, selStmt;
+non terminal WhileExp iterStmt;
+non terminal ReturnExp returnStmt;
+
+non terminal Var var;
+non terminal CallExp call;
+non terminal Integer relop, mulop, addop; 
+
+precedence left PLUS, MINUS, MUL, DIV;
+precedence right ASSIGN;
+precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
+
 
 /* ----------------------------Grammar Section-------------------- */
    
 start with program;
 
+/*
 program1     ::= exp:e 
                  {: RESULT = e; :}
                ;
+*/
 
-program	     ::= stmt_seq:s
-                 {: RESULT = s; :}
+// <program> -> <declaration-list>
+program	     ::= decList:d
+                 {: RESULT = d; :}
                ;
 
-stmt_seq     ::= stmt_seq:s1 SEMI stmt:s2 
-                 {: ExpList t = s1;
+//<declaration-list> -> <declaration-list> <declaration> | <declaration>
+decList     ::= decList:d1 dec:d2 
+                 {: decList t = d1;
                     while( t.tail != null )
                       t = t.tail;
-                    t.tail = new ExpList(s2, null);
-                    RESULT = s1;
+                    t.tail = new decList(d2, null);
+                    RESULT = d1;
                  :}
-               | stmt:s
-                 {: RESULT = new ExpList(s, null); :}
-               | error SEMI stmt:s
+               | dec:d
+                 {: RESULT = new decList(d, null); :}
+               | error SEMI dec:d
                  {: parser.report_error("invalid", null); 
-                    RESULT = new ExpList(s, null); 
+                    RESULT = new decList(d, null); 
                  :}
                ;
 
-stmt         ::= if_stmt:i
-                 {: RESULT = i; :}
-               | repeat_stmt:r
-                 {: RESULT = r; :}
-               | assign_stmt:a
-                 {: RESULT = a; :}
-               | read_stmt:r
-                 {: RESULT = r; :}
-               | write_stmt:w
-                 {: RESULT = w; :}
-               ;
-
-if_stmt      ::= IF:i exp:e THEN stmt_seq:s END
-                 {: RESULT = new IfExp(ileft, iright, e, s, null); :}
-               | IF:i exp:e THEN stmt_seq:s1 ELSE stmt_seq:s2 END
-                 {: RESULT = new IfExp(ileft, iright, e, s1, s2); :}
-               ;
-
-repeat_stmt  ::= REPEAT:r stmt_seq:s UNTIL exp:e
-                 {: RESULT = new RepeatExp(rleft, rright, s, e); :}
-               ;
-
-assign_stmt  ::= ID:i ASSIGN exp:e
-                 {: RESULT = new AssignExp(ileft, iright, new VarExp(ileft, iright, i), e); :} 
-               ;
-
-read_stmt    ::= READ:r ID:i
-                 {: RESULT = new ReadExp(rleft, rright, new VarExp(rleft, rright, i)); :}
-               ;
-
-write_stmt   ::= WRITE:w exp:e
-                 {: RESULT = new WriteExp(wleft, wright, e); :}
-               ;
-
-exp          ::= simple_exp:s1 LT simple_exp:s2
-                 {: RESULT = new OpExp(s1left, s1right, s1, OpExp.LT, s2); :}
-               | simple_exp:s1 GT simple_exp:s2
-                 {: RESULT = new OpExp(s1left, s1right, s1, OpExp.GT, s2); :}
-               | simple_exp:s1 EQ simple_exp:s2
-                 {: RESULT = new OpExp(s1left, s1right, s1, OpExp.EQ, s2); :}
-               | simple_exp:s
-                 {: RESULT = s; :}
-               ;
-
-simple_exp   ::= simple_exp:s PLUS term:t
-                 {: RESULT = new OpExp(sleft, sright, s, OpExp.PLUS, t); :}
-               | simple_exp:s MINUS term:t
-                 {: RESULT = new OpExp(sleft, sright, s, OpExp.MINUS, t); :}
-               | term:t
-                 {: RESULT = t; :}
-               ;
-
-term         ::= term:t TIMES factor:f
-                 {: RESULT = new OpExp(tleft, tright, t, OpExp.TIMES, f); :}
-               | term:t OVER factor:f
-                 {: RESULT = new OpExp(tleft, tright, t, OpExp.OVER, f); :}
-               | factor:f
+//<declaration> -> <var-declaration> | <fun-declaration>
+dec         ::= varDec:d
+                 {: RESULT = d; :}
+               | funDec:f
                  {: RESULT = f; :}
                ;
 
-factor       ::= LPAREN exp:e RPAREN
+//<var-declaration> -> <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
+varDec     ::= nameTy:t ID:i SEMI 
+                 {: if(nameTy.VOID == t.typ){
+                      parser.report_error("Void is not a valid type", t);
+                    } else {
+                      RESULT = new SimpleDec(tleft, t, i);
+                    }
+                 :}
+               | nameTy:t ID:i LBRACKET NUM:n RBRACKET SEMI
+                 {: if(NameTy.VOID == t.typ){
+                      parser.report_error("Void is not a valid type", t);
+                    } else {
+                      RESULT = new ArrayDec(tleft, t, i, new IntExp(nleft, Integer.parseInt(n)));
+                    }
+                  :}
+               | error: e SEMI
+                 {: parser.report_error("invalid", e); 
+                 :}
+               ;
+
+//<type-specifier> -> int  | void
+nameTy      ::= INT:n
+                 {: RESULT = new NameTy(nleft, NameTy.INT); :}
+               | VOID:v
+                 {: RESULT = new NameTy(vleft, NameTy.VOID); :}
+               ;
+
+// <fun-declaration> -> <type-specifier> ID ( <params> ) <compound-stmt>
+funDec      ::= nameTy:t ID:i LPAREN params:p RPAREN compStmt:c
+                 {: RESULT = new funDec(tleft, t, i, p, c); :}
+               ;
+
+// <params> -> <param-list> | void
+params      ::= paramList:p
+                 {: RESULT = p; :} 
+               | VOID:v
+                 {: RESULT = new VarDecList(new SimpleDec(vleft, new NameTy(vleft, NameTy.VOID), null), null); :}
+               ;
+
+// <param-list> -> <param-list> , <param> | <param>
+paramList    ::= paramList:p1 COMMA param:p2
+                 {: VarDecList v = p1;
+                    if(p1==null){
+                      p1 = new VarDecList(p2, null);
+                      RESULT = p1;
+                    } else{
+                      while(v.tail != null){
+                        v = v.tail;
+                      }
+                      v.tail = new VarDecList(p2, null);
+                      RESULT = p1;
+                    }
+                 :}
+                | param:p
+                {: RESULT = new VarDecList(p, null); :} 
+               ;
+
+// <param> -> <type-specifier> ID | <type-specifier> ID []
+param        ::= INT:n ID:i  
+                 {: RESULT = new SimpleDec(nleft, new NameTy(nleft, NameTy.INT), i);
+                 :}
+               | INT:n ID:i LBRACKET RBRACKET
+                 {: RESULT = new ArrayDec(nleft, new NameTy(nleft, NameTy.INT), i, new IntExp(nleft, Integer.parseInt(n)));
+                  :}
+               ;
+
+// <compound-stmt> -> { <local-declarations> <statement-list> }
+compStmt     ::= LBRACE:lb locDec:ld stmtList:s RBRACE
+                 {: RESULT = new CompoundExp(lbleft, ld, s); :}
+               ;
+
+//  <local-declarations> -> <local-declarations> <var-declaration> | epsilon
+locDec       ::= locDec:d1 LT varDec:d2
+                 {: VarDecList t = d1; 
+                    if(d1 == null){
+                      d1 = new VarDecList(d2, null);
+                      RESULT = d1;
+                    } else {
+                      while(t.tail != null)
+                        t = t.tail;
+                      t.tail = new VarDecList(d2, null);
+                      RESULT = d1;
+                    }
+                 :}
+                | 
+               ;
+
+// <statement-list> -> <statement-list> <statement> | epsilon
+stmtList      ::= stmtList:s1 LT stmt:s2
+                 {: ExpList t = s1; 
+                    if(s1 == null){
+                      s1 = new ExpList(s2, null);
+                      RESULT = s1;
+                    } else {
+                      while(t.tail != null)
+                        t = t.tail;
+                      t.tail = new ExpList(s2, null);
+                      RESULT = s1;
+                    }
+                 :}
+                | 
+               ;
+
+// <statement> -> <expression-stmt> | <compound-stmt> | <selection-stmt> | <iteration-stmt> | <return-stmt>
+stmt         ::= expStmt:s
+                 {: RESULT = s; :}
+               | compStmt:s
+                 {: RESULT = s; :}
+               | selStmt:s
+                 {: RESULT = s; :}
+               | iterStmt:s
+                 {: RESULT = s; :}
+               | returnStmt:s
+                 {: RESULT = s; :}
+               ;
+
+// <expression-stmt> -> <expression> ; | ;
+expStmt       ::= exp:e SEMI
                  {: RESULT = e; :}
+               | SEMI
+               ;
+
+// <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
+selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
+                  {: RESULT = new IfExp(ileft, e, s , null); :}
+               | IF:i LPAREN exp:e RPAREN stmt:s1 ELSE stmt:s2
+                  {: RESULT = new IfExp(ileft, e, s1, s2); :}
+               ;
+
+// <iteration-stmt> -> while ( <expression> ) <statement>
+iterStmt       ::= WHILE:w LPAREN exp:e RPAREN stmt:s
+                  {: RESULT = new WhileExp(wleft, e, s); :}
+               ;
+
+// <return-stmt> -> return <expression> ; | return ;
+returnStmt     ::= RETURN:r exp:e SEMI
+                  {: RESULT = new ReturnExp(rleft, e); :}
+               | RETURN:r SEMI
+                  {: RESULT = new ReturnExp(rleft, null); :}
+               ;
+
+// <expression> -> <var> = <expression> | <simple-expression>
+exp           ::= var:v ASSIGN exp:e 
+                  {: RESULT = new AssignExp(vleft, v, e); :}
+               | simpExp:e
+                  {: RESULT = e; :}
+               ;
+
+// <var> -> ID | ID [ <expression> ]
+var            ::= ID:i
+                  {: RESULT = new SimpleVar(ileft, i); :}
+               | ID:i LBRACKET exp:e RBRACKET
+                  {: RESULT = new IndexVar(ileft, i, e); :}
+               ;
+
+// <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
+simpExp       ::= addExp:e1 relop:a addExp:e2
+                  {: RESULT = new OpExp(eleft, e1, a, e2); :}
+               | addExp:e
+                  {: RESULT = e; :}
+               ;
+
+// <relop> -> <= | < | > | >= | == | !=
+relop        ::= LE
+                  {: RESULT = OpExp.LE; :}
+               | LT
+                  {: RESULT = OpExp.LT; :}
+               | GT
+                  {: RESULT = OpExp.GT; :}
+               | GE
+                  {: RESULT = OpExp.GE; :}
+               | EQ
+                  {: RESULT = OpExp.EQ; :}
+               | NE
+                  {: RESULT = OpExp.NE; :}
+               ;
+
+// <additive-expression> -> <additive-expression> <addop> <term> | <term>
+addExp       ::= addExp:e addop:a term:t
+                  {: RESULT = new OpExp(eleft, e, a, t); :}
+               | term:t
+                  {: RESULT = t; :}
+               ;
+
+// <addop> -> + | -
+addop       ::= PLUS
+                  {: RESULT = OpExp.PLUS; :}
+               | MINUS
+                  {: RESULT = OpExp.MINUS; :}
+               ;
+
+// <term> -> <term> <mulop> <factor> | <factor>
+term        ::= term:t mulop:m factor:f
+                  {: RESULT = new OpExp(tleft, t, m ,f); :}
+               | factor:f
+                  {: RESULT = f; :}
+               ;
+ 
+//<mulop> -> * | /
+mulop       ::= MUL
+                  {: RESULT = OpExp.MUL; :}
+               | DIV
+                  {: RESULT = OpExp.DIV; :}
+               ;
+
+// <factor> -> ( <expression> ) | <var> | <call> | NUM
+factor       ::= LPAREN exp:e RPAREN
+                  {: RESULT = e; :}
+               | var:v
+                  {: RESULT = new varExp(vleft, v); :}
+               | call:c
+                  {: RESULT = c; :}
                | NUM:n
-                 {: RESULT = new IntExp(nleft, nright, n); :}
-               | ID:i
-                 {: RESULT = new VarExp(ileft, iright, i); :}
+                  {: RESULT = new IntExp(nleft, Integer.parseInt(n)); :}
+               ;
+
+// <call> -> ID ( <args> )
+call          ::= ID:i LPAREN args:a RPAREN
+                  {: RESULT = new CallExp(ileft, i, a); :}
+               ;
+
+// <args> -> <arg-list> | epsilon
+args         ::= argList:a
+                  {: RESULT = a; :}
+               | 
+               ;
+
+// <arg-list> -> <arg-list> , <expression> | <expression>
+argList      ::= argList: a COMMA exp:e
+                  {: ExpList b = a;
+                     if(a == null) {
+                        a = new ExpList(e, null);
+                        RESULT = a;
+                     } else {
+                        while(b.tail != null) {
+                           b = b.tail;
+                        }
+                     b.tail = new ExpList(e, null);
+                     RESULT = a; 
+                     }; :}
+               | exp:e
+                  {: RESULT = new ExpList(e, null); :}
                ;
