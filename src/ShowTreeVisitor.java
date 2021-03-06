@@ -48,20 +48,29 @@ public class ShowTreeVisitor implements AbsynVisitor {
       case OpExp.MINUS:
         System.out.println( " - " );
         break;
-      case OpExp.TIMES:
+      case OpExp.MUL:
         System.out.println( " * " );
         break;
-      case OpExp.OVER:
+      case OpExp.DIV:
         System.out.println( " / " );
         break;
       case OpExp.EQ:
         System.out.println( " = " );
         break;
+      case OpExp.NE:
+        System.out.println( " != " );
+        break;
       case OpExp.LT:
         System.out.println( " < " );
         break;
+      case OpExp.LE:
+        System.out.println( " <= " );
+        break;
       case OpExp.GT:
         System.out.println( " > " );
+        break;
+      case OpExp.GE:
+        System.out.println( " >= " );
         break;
       default:
         System.out.println( "Unrecognized operator at line " + exp.row + " and column " + exp.col);
