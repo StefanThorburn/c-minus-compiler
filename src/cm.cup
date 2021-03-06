@@ -175,7 +175,7 @@ varDec     ::= nameTy:t ID:i SEMI
 nameTy      ::= INT:n
                  {: RESULT = new NameTy(nleft, nright, NameTy.INT); :}
                | VOID:v
-                 {: RESULT = new NameTy(vleft, nright, NameTy.VOID); :}
+                 {: RESULT = new NameTy(vleft, vright, NameTy.VOID); :}
                ;
 
 // <fun-declaration> -> <type-specifier> ID ( <params> ) <compound-stmt>
