@@ -20,6 +20,7 @@ public class OpExp extends Exp {
     this.row = row;
     this.col = col;
     this.op = op;
+    this.left = left;
     this.right = right;
   }
 
