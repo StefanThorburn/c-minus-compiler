@@ -48,15 +48,29 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }  
 
   public void visit (DecList decList, int level ) {
-    //TODO: Complete stub
+    indent( level );
+    System.out.println("Declaration list:");
+    level++;
+    while( decList != null ) {
+      decList.head.accept( this, level );
+      decList = decList.tail;
+    } 
   }
 
   public void visit (VarDecList decList, int level ) {
-    //TODO: Complete stub
+    indent( level );
+    System.out.println("Variable Declaration list:");
+    level++;
+    while( decList != null ) {
+      decList.head.accept( this, level );
+      decList = decList.tail;
+    } 
   }
 
   public void visit( ExpList expList, int level ) {
-    //TODO: Update function
+    indent( level );
+    System.out.println("Expression list:");
+    level++;
     while( expList != null ) {
       expList.head.accept( this, level );
       expList = expList.tail;
@@ -64,7 +78,6 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }  
 
   public void visit( AssignExp exp, int level ) {
-    //TODO: Update function
     indent( level );
     System.out.println( "AssignExp: " );
     level++;
@@ -80,12 +93,14 @@ public class ShowTreeVisitor implements AbsynVisitor {
     exp.args.accept(this, level);
   }
   
-  public void visit (CompoundExp exp, int level ) {
-    //TODO: Complete stub
+  public void visit (CompoundExp compoundList, int level ) {
+    indent(level);
+    System.out.println("Compound statement list:");    
+    compoundList.decs.accept( this, level );
+    compoundList.exps.accept( this, level );
   }    
 
   public void visit( IfExp exp, int level ) {
-    //TODO: Update function
     indent( level );
     System.out.println( "IfExp: " );
     level++;
@@ -96,17 +111,16 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit( IntExp exp, int level ) {
-    //TODO: Update function
     indent( level );
     System.out.println( "IntExp: " + exp.value ); 
   }
 
   public void visit (NilExp exp, int level ) {
-    //TODO: Complete stub
+    indent(level);
+    System.out.println("NilExp");
   }
 
   public void visit( OpExp exp, int level ) {
-    //TODO: Update function
     indent( level );
     System.out.print( "OpExp:" ); 
     switch( exp.op ) {
@@ -122,12 +136,6 @@ public class ShowTreeVisitor implements AbsynVisitor {
       case OpExp.DIV:
         System.out.println( " / " );
         break;
-      case OpExp.EQ:
-        System.out.println( " = " );
-        break;
-      case OpExp.NE:
-        System.out.println( " != " );
-        break;
       case OpExp.LT:
         System.out.println( " < " );
         break;
@@ -140,6 +148,12 @@ public class ShowTreeVisitor implements AbsynVisitor {
       case OpExp.GE:
         System.out.println( " >= " );
         break;
+      case OpExp.EQ:
+        System.out.println( " == " );
+        break;
+      case OpExp.NE:
+        System.out.println( " != " );
+        break;
       default:
         System.out.println( "Unrecognized operator at line " + exp.row + " and column " + exp.col);
     }
@@ -149,16 +163,29 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit (ReturnExp exp, int level ) {
-    //TODO: Complete stub
+    indent(level);
+    System.out.println("ReturnExp: ");
+    exp.exp.accept(this, level);
   }  
 
   public void visit( VarExp exp, int level ) {
-    //TODO: Update function
     indent( level );
-    //System.out.println( "VarExp: " + exp.name );
+    System.out.println( "VarExp: ");
+    exp.variable.accept(this, level);
+
   }
 
   public void visit (WhileExp exp, int level ) {
-    //TODO: Complete stub
+    indent(level);
+    System.out.println("Loop");
+    
+    level++;
+    indent(level);
+    System.out.println("Condition: ");
+    exp.test.accept(this, level+1);
+
+    indent(level);
+    System.out.println("Body: ");
+    exp.body.accept(this, level+1);
   }
 }
