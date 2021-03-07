@@ -1,8 +1,8 @@
 package absyn;
 
 public class NameTy extends Exp {
-  public final static int INT = 0;
-  public final static int VOID = NameTy.INT + 1;
+  public final static int VOID = 0;
+  public final static int INT = NameTy.VOID + 1;
   
   public int type;
 

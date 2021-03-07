@@ -114,8 +114,8 @@ comment = "/*"(.|{WhiteSpace})*"*/"
 // Special symbols
 "+"               { return symbol(sym.PLUS); }
 "-"               { return symbol(sym.MINUS); }
-"*"               { return symbol(sym.TIMES); }
-"/"               { return symbol(sym.DIVIDE); }
+"*"               { return symbol(sym.MUL); }
+"/"               { return symbol(sym.DIV); }
 "<"               { return symbol(sym.LT); }
 "<="              { return symbol(sym.LE); }
 ">"               { return symbol(sym.GT); }
@@ -123,14 +123,14 @@ comment = "/*"(.|{WhiteSpace})*"*/"
 "=="              { return symbol(sym.EQ); }
 "!="              { return symbol(sym.NE); }
 "="               { return symbol(sym.ASSIGN); }
-";"               { return symbol(sym.SEMICOLON); }
+";"               { return symbol(sym.SEMI); }
 ","               { return symbol(sym.COMMA); }
 "("               { return symbol(sym.LPAREN); }
 ")"               { return symbol(sym.RPAREN); }
-"["               { return symbol(sym.LSQUARE); }
-"]"               { return symbol(sym.RSQUARE); }
-"{"               { return symbol(sym.LCURLY); }
-"}"               { return symbol(sym.RCURLY); }
+"["               { return symbol(sym.LBRACKET); }
+"]"               { return symbol(sym.RBRACKET); }
+"{"               { return symbol(sym.LBRACE); }
+"}"               { return symbol(sym.RBRACE); }
 // Other stuff
 {number}          { return symbol(sym.NUM); }
 {identifier}      { return symbol(sym.ID); }
