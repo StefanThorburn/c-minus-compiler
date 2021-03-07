@@ -130,7 +130,7 @@ program	     ::= decList:d
 
 //<declaration-list> -> <declaration-list> <declaration> | <declaration>
 decList     ::= decList:d1 dec:d2 
-                 {: decList t = d1;
+                 {: DecList t = d1;
                     while( t.tail != null )
                       t = t.tail;
                     t.tail = new DecList(d2, null);
@@ -153,17 +153,17 @@ dec         ::= varDec:d
 
 //<var-declaration> -> <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
 varDec     ::= nameTy:t ID:i SEMI 
-                 {: if(nameTy.VOID == t.typ){
+                 {: if(NameTy.VOID == t.type){
                       parser.report_error("Void is not a valid type", t);
                     } else {
                       RESULT = new SimpleDec(tleft, tright, t, i);
                     }
                  :}
                | nameTy:t ID:i LBRACKET NUM:n RBRACKET SEMI
-                 {: if(NameTy.VOID == t.typ){
+                 {: if(NameTy.VOID == t.type){
                       parser.report_error("Void is not a valid type", t);
-                    } else {
-                      RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));
+                    } else {                      
+                      RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
                   :}
                | error: e SEMI
@@ -209,11 +209,12 @@ paramList    ::= paramList:p1 COMMA param:p2
                ;
 
 // <param> -> <type-specifier> ID | <type-specifier> ID []
+// Note for second rule: with empty brackets, the size is 0 by default
 param        ::= INT:n ID:i  
                  {: RESULT = new SimpleDec(nleft, nright, new NameTy(nleft, nright, NameTy.INT), i);
                  :}
                | INT:n ID:i LBRACKET RBRACKET
-                 {: RESULT = new ArrayDec(nleft, nright, new NameTy(nleft, nright, NameTy.INT), i, new IntExp(nleft, nright, Integer.parseInt(n)));
+                 {: RESULT = new ArrayDec(nleft, nright, new NameTy(nleft, nright, NameTy.INT), i, new IntExp(nleft, nright, 0));
                   :}
                ;
 
@@ -307,8 +308,9 @@ var            ::= ID:i
                ;
 
 // <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
+//Use the position of the left operand for the expression
 simpExp       ::= addExp:e1 relop:a addExp:e2
-                  {: RESULT = new OpExp(eleft, eright, e1, a, e2); :}
+                  {: RESULT = new OpExp(e1left, e1right, e1, a, e2); :}
                | addExp:e
                   {: RESULT = e; :}
                ;

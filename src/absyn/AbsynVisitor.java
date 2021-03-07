@@ -34,8 +34,6 @@ public interface AbsynVisitor {
 
   public void visit( SimpleVar exp, int level );
 
-  public void visit( VarDec exp, int level );
-
   public void visit( VarDecList exp, int level );
 
   public void visit( VarExp exp, int level );
