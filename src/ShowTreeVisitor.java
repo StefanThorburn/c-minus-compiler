@@ -14,22 +14,37 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit (IndexVar var, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.print( "IndexVar: " + var.name);
+    level++;
+    var.index.accept( this, level );
   }
 
   public void visit (SimpleVar var, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.print( "SimpleVar: " + var.name);
   }
 
   public void visit (ArrayDec array, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.print( "ArrayDec: " + array.type.toString() + array.name + array.size.value);
   }
 
   public void visit (FunctionDec functionDec, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.print( "FunctionDec: " + functionDec.result.toString() + functionDec.func);
+    level++;
+    functionDec.params.accept(this, level);
+    functionDec.body.accept(this, level);
   }
 
   public void visit (SimpleDec dec, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.print( "SimpleDec: " + dec.type.toString() + dec.name);
   }  
 
   public void visit (DecList decList, int level ) {
@@ -51,7 +66,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit( AssignExp exp, int level ) {
     //TODO: Update function
     indent( level );
-    System.out.println( "AssignExp:" );
+    System.out.println( "AssignExp: " );
     level++;
     exp.lhs.accept( this, level );
     exp.rhs.accept( this, level );
@@ -59,6 +74,10 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit (CallExp exp, int level ) {
     //TODO: Complete stub
+    indent( level );
+    System.out.println( "CallExp: " + exp.func);
+    level++;
+    exp.args.accept(this, level);
   }
   
   public void visit (CompoundExp exp, int level ) {
@@ -68,7 +87,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit( IfExp exp, int level ) {
     //TODO: Update function
     indent( level );
-    System.out.println( "IfExp:" );
+    System.out.println( "IfExp: " );
     level++;
     exp.test.accept( this, level );
     exp.thenpart.accept( this, level );
