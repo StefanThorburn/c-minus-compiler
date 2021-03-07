@@ -8,7 +8,7 @@
 /* ----------------------Preliminary Declarations Section--------------------*/
    
 /* Import the class java_cup.runtime.*  */
-//import java_cup.runtime.*;
+import java_cup.runtime.*;
 import absyn.*;
    
 /* Parser code to change the way the parser reports errors (include
@@ -137,8 +137,14 @@ program	     ::= decList:d
                  */
 decList     ::= decList:d1 dec:d2 
                  {: DecList t = d1;
-                    while( t.tail != null )
-                      t = t.tail;
+                    if(d1 == null){
+                       d1 = new DecList(d2, null);
+                       RESULT = d1;
+                    } else {
+                     while( t.tail != null ){
+                        t = t.tail;
+                     }
+                    }
                     t.tail = new DecList(d2, null);
                     RESULT = d1;
                  :}
@@ -172,7 +178,10 @@ varDec     ::= nameTy:t ID:i SEMI
                     } else {                      
                       RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
-                  :}               
+                  :}  
+               | error: e SEMI
+                 {: parser.report_error("invalid", e); 
+                 :}             
                ;
 
 //<type-specifier> -> int  | void
@@ -234,8 +243,9 @@ locDec       ::= locDec:d1 LT varDec:d2
                       d1 = new VarDecList(d2, null);
                       RESULT = d1;
                     } else {
-                      while(t.tail != null)
+                      while(t.tail != null){
                         t = t.tail;
+                      }
                       t.tail = new VarDecList(d2, null);
                       RESULT = d1;
                     }
