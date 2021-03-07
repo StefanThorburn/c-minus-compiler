@@ -129,6 +129,12 @@ program	     ::= decList:d
                ;
 
 //<declaration-list> -> <declaration-list> <declaration> | <declaration>
+// Error detection rule, omitted for the time being
+/*            | error SEMI dec:d
+                 {: parser.report_error("invalid", null); 
+                    RESULT = new DecList(d, null); 
+                 :}
+                 */
 decList     ::= decList:d1 dec:d2 
                  {: DecList t = d1;
                     while( t.tail != null )
@@ -137,11 +143,7 @@ decList     ::= decList:d1 dec:d2
                     RESULT = d1;
                  :}
                | dec:d
-                 {: RESULT = new DecList(d, null); :}
-               | error SEMI dec:d
-                 {: parser.report_error("invalid", null); 
-                    RESULT = new DecList(d, null); 
-                 :}
+                 {: RESULT = new DecList(d, null); :}               
                ;
 
 //<declaration> -> <var-declaration> | <fun-declaration>
@@ -152,6 +154,11 @@ dec         ::= varDec:d
                ;
 
 //<var-declaration> -> <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
+// Error detection rule, omitted for the time being
+/*              | error: e SEMI
+                 {: parser.report_error("invalid", e); 
+                 :}
+                 */
 varDec     ::= nameTy:t ID:i SEMI 
                  {: if(NameTy.VOID == t.type){
                       parser.report_error("Void is not a valid type", t);
@@ -165,10 +172,7 @@ varDec     ::= nameTy:t ID:i SEMI
                     } else {                      
                       RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
-                  :}
-               | error: e SEMI
-                 {: parser.report_error("invalid", e); 
-                 :}
+                  :}               
                ;
 
 //<type-specifier> -> int  | void
