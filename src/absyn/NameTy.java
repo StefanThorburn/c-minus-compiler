@@ -15,4 +15,15 @@ public class NameTy extends Exp {
   public void accept( AbsynVisitor visitor, int level ) {
     visitor.visit( this, level );
   }
+
+  @Override
+  public String toString() {
+    switch( type ) {
+      case NameTy.INT:
+        return "int";
+        break;
+      default:
+        return "void";
+    }
+  }
 }
