@@ -21,9 +21,9 @@ public class NameTy extends Exp {
     switch( type ) {
       case NameTy.INT:
         return "int";
-        break;
       default:
         return "void";
     }
+
   }
 }
