@@ -132,8 +132,8 @@ comment = "/*"(.|{WhiteSpace})*"*/"
 "{"               { return symbol(sym.LBRACE); }
 "}"               { return symbol(sym.RBRACE); }
 // Other stuff
-{number}          { return symbol(sym.NUM); }
-{identifier}      { return symbol(sym.ID); }
+{number}          { return symbol(sym.NUM, yytext()); }
+{identifier}      { return symbol(sym.ID, yytext()); }
 {WhiteSpace}+     { /* skip whitespace */ }
 // Comments
 {commentError}    { return symbol(sym.ERROR); }
