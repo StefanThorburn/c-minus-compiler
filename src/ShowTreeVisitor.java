@@ -23,7 +23,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (SimpleVar var, int level ) {
     //TODO: Complete stub
     indent(level);
-    System.out.print( "SimpleVar: " + var.name);
+    System.out.println( "SimpleVar: " + var.name);
   }
 
   public void visit (ArrayDec array, int level ) {
