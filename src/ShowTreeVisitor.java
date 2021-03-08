@@ -10,6 +10,8 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit (NameTy nameTy, int level ) {
     //TODO: Complete stub
+    indent(level);
+    System.out.println(nameTy.toString());
   }
 
   public void visit (IndexVar var, int level ) {
@@ -74,12 +76,17 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit( ExpList expList, int level ) {
     indent( level );
-    System.out.println("Expression list: ");
-    level++;
-    while( expList != null ) {
-      expList.head.accept( this, level );
-      expList = expList.tail;
-    } 
+    if (expList.head == null) {
+      System.out.println("Empty ExpList");
+    }
+    else {
+      System.out.println("Expression list: ");
+      level++;
+      while( expList != null ) {
+        expList.head.accept( this, level );
+        expList = expList.tail;
+      } 
+    }    
   }  
 
   public void visit( AssignExp exp, int level ) {
@@ -93,16 +100,25 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (CallExp exp, int level ) {
     //TODO: Complete stub
     indent( level );
-    System.out.println( "CallExp: " + exp.func);
-    level++;
-    exp.args.accept(this, level);
+    if (exp.func == null) {
+      System.out.println("CallExp: no args");
+    }
+    else {
+      System.out.println( "CallExp: " + exp.func);
+      level++;
+      exp.args.accept(this, level+1);
+    }    
   }
   
   public void visit (CompoundExp compoundList, int level ) {
     indent(level);
     System.out.println("Compound statement list: ");    
-    compoundList.decs.accept( this, level );
-    compoundList.exps.accept( this, level );
+    if (compoundList.decs != null) {
+      compoundList.decs.accept( this, level+1 );
+    }
+    if (compoundList.exps != null) {
+      compoundList.exps.accept( this, level+1 );
+    }    
   }    
 
   public void visit (ErrorExp compoundList, int level ) {
@@ -181,7 +197,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit( VarExp exp, int level ) {
     indent( level );
     System.out.println( "VarExp: ");
-    exp.variable.accept(this, level);
+    exp.variable.accept(this, level+1);
   }
 
   public void visit (WhileExp exp, int level ) {

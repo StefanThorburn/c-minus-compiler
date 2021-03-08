@@ -241,7 +241,8 @@ compStmt     ::= LBRACE:lb locDec:ld stmtList:s RBRACE
                ;
 
 //  <local-declarations> -> <local-declarations> <var-declaration> | epsilon
-locDec       ::= locDec:d1 LT varDec:d2
+//TODO: Fix empty production
+locDec       ::= locDec:d1 varDec:d2
                  {: VarDecList t = d1; 
                     if(d1 == null){
                       d1 = new VarDecList(d2, null);
@@ -254,11 +255,13 @@ locDec       ::= locDec:d1 LT varDec:d2
                       RESULT = d1;
                     }
                  :}
-                | 
+                | {: RESULT = null; :}
                ;
 
 // <statement-list> -> <statement-list> <statement> | epsilon
-stmtList      ::= stmtList:s1 LT stmt:s2
+//TODO: Fix empty production
+// {: RESULT = new ExpList(null, null); :}
+stmtList      ::= stmtList:s1 stmt:s2
                  {: ExpList t = s1; 
                     if(s1 == null){
                       s1 = new ExpList(s2, null);
@@ -270,7 +273,7 @@ stmtList      ::= stmtList:s1 LT stmt:s2
                       RESULT = s1;
                     }
                  :}
-                | 
+                | {: RESULT = null; :}
                ;
 
 // <statement> -> <expression-stmt> | <compound-stmt> | <selection-stmt> | <iteration-stmt> | <return-stmt>
@@ -393,9 +396,11 @@ call          ::= ID:i LPAREN args:a RPAREN
                ;
 
 // <args> -> <arg-list> | epsilon
+//TODO FIx empty production
+// {: RESULT = new ExpList(null, null); :}
 args         ::= argList:a
                   {: RESULT = a; :}
-               | 
+               |  {: RESULT = new ExpList(null, null); :}
                ;
 
 // <arg-list> -> <arg-list> , <expression> | <expression>
