@@ -32,6 +32,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
     System.out.print( "ArrayDec: " + array.type.toString() + array.name + array.size.value);
   }
 
+  public void visit (ErrorDec compoundList, int level ) {
+    indent(level);
+    System.out.println("ErrorDec");
+  }    
+
   public void visit (FunctionDec functionDec, int level ) {
     //TODO: Complete stub
     indent(level);
@@ -98,6 +103,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
     System.out.println("Compound statement list:");    
     compoundList.decs.accept( this, level );
     compoundList.exps.accept( this, level );
+  }    
+
+  public void visit (ErrorExp compoundList, int level ) {
+    indent(level);
+    System.out.println("ErrorExp");
   }    
 
   public void visit( IfExp exp, int level ) {
