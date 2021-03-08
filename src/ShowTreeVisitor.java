@@ -19,7 +19,9 @@ public class ShowTreeVisitor implements AbsynVisitor {
     indent(level);
     System.out.println( "IndexVar: " + var.name);
     level++;
-    var.index.accept( this, level );
+    indent(level);
+    System.out.println("Index: ");
+    var.index.accept( this, level + 1);
   }
 
   public void visit (SimpleVar var, int level ) {
@@ -106,8 +108,12 @@ public class ShowTreeVisitor implements AbsynVisitor {
     //TODO: Complete stub
     indent( level );
     System.out.println("CallExp: " + exp.func);    
-
-    if (exp.args != null && exp.args.head != null) {
+    if (exp.args == null) {
+      level++;
+      indent(level);
+      System.out.println("ErrorArgs");
+    }
+    else if (exp.args.head != null) {
       level++;
       exp.args.accept(this, level);
     }    
