@@ -1,0 +1,15 @@
+/*
+This file has no errors.
+*/
+
+void main(void) {
+  int x;
+  x = 5;
+
+  while (x > 3) {
+    x = x - 1;
+  }
+
+  if (x == 3) x = 4;
+  else x = 3;
+}
