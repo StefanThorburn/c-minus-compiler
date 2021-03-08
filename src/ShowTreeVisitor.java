@@ -51,7 +51,12 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (SimpleDec dec, int level ) {
     //TODO: Complete stub
     indent(level);
-    System.out.println( "SimpleDec: " + dec.type.toString() + " " + dec.name);
+    if (dec.type.type != NameTy.VOID) {
+      System.out.println( "SimpleDec: " + dec.type.toString() + " " + dec.name);
+    }
+    else {
+      System.out.println( "SimpleDec: " + dec.type.toString());
+    }
   }  
 
   public void visit (DecList decList, int level ) {
@@ -100,13 +105,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (CallExp exp, int level ) {
     //TODO: Complete stub
     indent( level );
-    if (exp.func == null) {
-      System.out.println("CallExp: no args");
-    }
-    else {
-      System.out.println( "CallExp: " + exp.func);
+    System.out.println("CallExp: " + exp.func);    
+
+    if (exp.args != null) {
       level++;
-      exp.args.accept(this, level+1);
+      exp.args.accept(this, level);
     }    
   }
   
@@ -191,7 +194,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (ReturnExp exp, int level ) {
     indent(level);
     System.out.println("ReturnExp: ");
-    exp.exp.accept(this, level);
+    exp.exp.accept(this, level+1);
   }  
 
   public void visit( VarExp exp, int level ) {
