@@ -31,7 +31,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit (ArrayDec array, int level ) {
     //TODO: Complete stub
     indent(level);
-    System.out.println( "ArrayDec: " + array.type.toString() + " " + array.name + " " + array.size.value);
+    System.out.println( "ArrayDec: " + array.type.toString() + " " + array.name + " [" + array.size.value + "]");
   }
 
   public void visit (ErrorDec compoundList, int level ) {
@@ -136,13 +136,13 @@ public class ShowTreeVisitor implements AbsynVisitor {
     exp.test.accept( this, level );
     
     indent( level );
-    System.out.print("then: ");
-    exp.thenpart.accept( this, level );
-    
+    System.out.println("then: ");
+    exp.thenpart.accept( this, level +1);
+
     if (exp.elsepart != null ) {
       indent( level );
-      System.out.print("else: ");
-      exp.elsepart.accept( this, level );
+      System.out.println("else: ");
+      exp.elsepart.accept( this, level +1);
     }       
     
   }

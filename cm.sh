@@ -9,6 +9,6 @@ else
       java -cp ./lib/cup.jar:./bin/ Scanner < $1
    else
       echo "Running C- parser with input file $1"
-      java -cp ./lib/cup.jar:./bin/ Main $1      
+      java -cp ./lib/cup.jar:./bin/ CM $1
    fi
 fi
