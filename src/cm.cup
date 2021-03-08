@@ -57,18 +57,16 @@ parser code {:
     }
 
     //Overload report_error method so that custom errors also receive line and column numbers
+    // Where line is the line number of the error, col is the column number
+    // and message is the particular error message
     public void report_error(String message, int line, int col) {
        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
         StringBuffer m = new StringBuffer("Error");
 
        if (line >= 0) {                
-         /* Add to the end of the StringBuffer error message
-         the line number of the error in the input. */
          m.append(" in line "+(line+1));            
                 
          if (col >= 0) {                    
-            /* Add to the end of the StringBuffer error message
-               the column number of the error in the input. */
             m.append(", column "+(col+1));
          }
        }
@@ -77,8 +75,6 @@ parser code {:
           this method the message that was passed into this method. */
        m.append(" : "+message);
    
-       /* Print the contents of the StringBuffer 'm', which contains
-          an error message, out on a line. */
        System.err.println(m);
     }
    
@@ -134,10 +130,11 @@ non terminal Var var;
 non terminal CallExp call;
 non terminal Integer relop, mulop, addop; 
 
-precedence left PLUS, MINUS, MUL, DIV;
-precedence right ASSIGN;
-precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
 
+precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
+precedence left PLUS, MINUS;
+precedence left MUL, DIV;
+precedence right ASSIGN;
 
 /* ----------------------------Grammar Section-------------------- */
    
@@ -209,7 +206,7 @@ varDec     ::= nameTy:t ID:i SEMI
                   :}  
                | nameTy:t ID:i LBRACKET RBRACKET SEMI
                  {: 
-                  parser.report_error("Must define array size at declaration", tleft, tright); 
+                  parser.report_error("Array size must be defined at declaration", tleft, tright); 
                   RESULT = new ErrorDec(tleft, tright);
                  :}                            
                ;
@@ -331,15 +328,20 @@ expStmt       ::= exp:e SEMI
 // <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
 /* Errors:
 - No 'else' without 'if'
+
+| IF:i stmt:s
+                  {: 
+                     parser.report_error("\'If\' with no condition", sleft, sright);
+                  :}
 */
 selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new IfExp(ileft, iright, e, s , null); :}
                | IF:i LPAREN exp:e RPAREN stmt:s1 ELSE stmt:s2
                   {: RESULT = new IfExp(ileft, iright, e, s1, s2); :}
-               | ELSE stmt:s
+               | ELSE:i stmt:s
                   {: 
-                     parser.report_error("\'Else\' with no corresponding \'if\'", sleft, sright);
-                     RESULT = new ErrorExp(sleft, sright);
+                     parser.report_error("\'Else\' with no corresponding \'if\'", ileft, iright);
+                     RESULT = new ErrorExp(ileft, iright);
                   :}            
                ;
 
@@ -394,6 +396,60 @@ relop        ::= LE
                ;
 
 // <additive-expression> -> <additive-expression> <addop> <term> | <term>
+// <addop> -> + | -
+// <term> -> <term> <mulop> <factor> | <factor>
+// <mulop> -> * | /
+// <factor> -> ( <expression> ) | <var> | <call> | NUM
+// Simplified using precedence rules
+addExp       ::= addExp:e1 PLUS addExp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.PLUS, e2); :}
+               | addExp:e1 MINUS addExp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.MINUS, e2); :}
+               | addExp:e1 MUL addExp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.MUL, e2); :}
+               | addExp:e1 DIV addExp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.DIV, e2); :}
+               | LPAREN exp:e RPAREN
+                  {: RESULT = e; :}
+               | var:v
+                  {: RESULT = new VarExp(vleft, vright, v); :}
+               | call:c
+                  {: RESULT = c; :}
+               | NUM:n
+                  {: RESULT = new IntExp(nleft, nright, Integer.parseInt(n)); :}
+               ;
+
+// <call> -> ID ( <args> )
+call          ::= ID:i LPAREN args:a RPAREN
+                  {: RESULT = new CallExp(ileft, iright, i, a); :}
+               ;
+
+// <args> -> <arg-list> | epsilon
+args         ::= argList:a
+                  {: RESULT = a; :}
+               |  {: RESULT = new ExpList(null, null); :}
+               ;
+
+// <arg-list> -> <arg-list> , <expression> | <expression>
+argList      ::= argList: a COMMA exp:e
+                  {: ExpList b = a;
+                     if(a == null) {
+                        a = new ExpList(e, null);
+                        RESULT = a;
+                     } else {
+                        while(b.tail != null) {
+                           b = b.tail;
+                        }
+                     b.tail = new ExpList(e, null);
+                     RESULT = a; 
+                     }; :}
+               | exp:e
+                  {: RESULT = new ExpList(e, null); :}
+               ;
+
+// Pre-simplified grammar
+/*
+// <additive-expression> -> <additive-expression> <addop> <term> | <term>
 addExp       ::= addExp:e addop:a term:t
                   {: RESULT = new OpExp(eleft, eright, e, a, t); :}
                | term:t
@@ -431,31 +487,4 @@ factor       ::= LPAREN exp:e RPAREN
                | NUM:n
                   {: RESULT = new IntExp(nleft, nright, Integer.parseInt(n)); :}
                ;
-
-// <call> -> ID ( <args> )
-call          ::= ID:i LPAREN args:a RPAREN
-                  {: RESULT = new CallExp(ileft, iright, i, a); :}
-               ;
-
-// <args> -> <arg-list> | epsilon
-args         ::= argList:a
-                  {: RESULT = a; :}
-               |  {: RESULT = new ExpList(null, null); :}
-               ;
-
-// <arg-list> -> <arg-list> , <expression> | <expression>
-argList      ::= argList: a COMMA exp:e
-                  {: ExpList b = a;
-                     if(a == null) {
-                        a = new ExpList(e, null);
-                        RESULT = a;
-                     } else {
-                        while(b.tail != null) {
-                           b = b.tail;
-                        }
-                     b.tail = new ExpList(e, null);
-                     RESULT = a; 
-                     }; :}
-               | exp:e
-                  {: RESULT = new ExpList(e, null); :}
-               ;
+*/
