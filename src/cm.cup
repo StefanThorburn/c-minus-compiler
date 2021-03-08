@@ -92,19 +92,6 @@ parser code {:
    
    
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
-
-/*
-terminal IF, THEN, ELSE, END, REPEAT, UNTIL, READ, WRITE;
-terminal ASSIGN, EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
-terminal String ID, NUM;
-terminal ERROR;
-
-non terminal Exp program1;
-non terminal ExpList program, stmt_seq;
-non terminal Exp stmt, if_stmt, repeat_stmt, assign_stmt, read_stmt, write_stmt;
-non terminal Exp exp, simple_exp, term, factor; 
-*/
-
 terminal IF, ELSE, WHILE, RETURN, VOID, INT;
 terminal ASSIGN, EQ, NE, LT, LE, GT, GE, PLUS, MINUS, MUL, DIV;
 terminal LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, SEMI, COMMA;
@@ -122,13 +109,15 @@ non terminal VarDec param;
 non terminal CompoundExp compStmt;
 
 non terminal ExpList args, argList, stmtList;
-non terminal Exp exp, stmt, expStmt, addExp, simpExp, term, factor, selStmt;
+non terminal Exp exp, stmt, expStmt, addExp, simpExp, selStmt;
+//non terminal Exp term, factor;
 non terminal WhileExp iterStmt;
 non terminal ReturnExp returnStmt;
 
 non terminal Var var;
 non terminal CallExp call;
-non terminal Integer relop, mulop, addop; 
+non terminal Integer relop; 
+//non terminal Integer mulop, addop;
 
 
 precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
@@ -323,6 +312,11 @@ stmt         ::= expStmt:s
 expStmt       ::= exp:e SEMI
                  {: RESULT = e; :}
                | SEMI
+               | error:e SEMI
+                  {:
+                     parser.report_error("Invalid expression", eleft, eright);
+                     RESULT = new ErrorExp(eleft, eright);                     
+                  :}
                ;
 
 // <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
@@ -370,6 +364,11 @@ var            ::= ID:i
                   {: RESULT = new SimpleVar(ileft, iright, i); :}
                | ID:i LBRACKET exp:e RBRACKET
                   {: RESULT = new IndexVar(ileft, iright, i, e); :}
+               | ID:i LBRACKET error:e RBRACKET
+                  {: 
+                     parser.report_error("Invalid array index", eleft, eright);
+                     RESULT = new IndexVar(ileft, iright, i, new ErrorExp(eleft, eright)); 
+                  :}
                ;
 
 // <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
@@ -422,6 +421,11 @@ addExp       ::= addExp:e1 PLUS addExp:e2
 // <call> -> ID ( <args> )
 call          ::= ID:i LPAREN args:a RPAREN
                   {: RESULT = new CallExp(ileft, iright, i, a); :}
+               | ID:i LPAREN error:e RPAREN
+                  {:
+                     parser.report_error("Invalid function call arguments", eleft, eright);
+                     RESULT = new CallExp(ileft, iright, i, null);
+                  :}
                ;
 
 // <args> -> <arg-list> | epsilon
