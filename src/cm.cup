@@ -168,6 +168,7 @@ dec         ::= varDec:d
 varDec     ::= nameTy:t ID:i SEMI 
                  {: if(NameTy.VOID == t.type){
                       parser.report_error("Void is not a valid type", t);
+                      RESULT = new ErrorDec(tleft, tright);
                     } else {
                       RESULT = new SimpleDec(tleft, tright, t, i);
                     }
@@ -175,12 +176,15 @@ varDec     ::= nameTy:t ID:i SEMI
                | nameTy:t ID:i LBRACKET NUM:n RBRACKET SEMI
                  {: if(NameTy.VOID == t.type){
                       parser.report_error("Void is not a valid type", t);
+                      RESULT = new ErrorDec(tleft, tright);
                     } else {                      
                       RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
                   :}  
                | error: e SEMI
-                 {: parser.report_error("invalid", e); 
+                 {: 
+                  parser.report_error("invalid", e); 
+                  RESULT = new ErrorDec(eleft, eright);
                  :}             
                ;
 
