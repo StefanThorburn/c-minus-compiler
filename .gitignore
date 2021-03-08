@@ -4,3 +4,14 @@ Lexer.java
 parser.java
 sym.java
 *~
+
+# ignore ad-hoc tests, except for ones meant for demo / provided tests #
+tests/*
+!tests/fac.cm
+!tests/gcd.cm
+!tests/sort.cm
+!tests/1.cm
+!tests/2.cm
+!tests/3.cm
+!tests/4.cm
+!tests/5.cm

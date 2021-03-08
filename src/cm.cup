@@ -55,6 +55,32 @@ parser code {:
            an error message, out on a line. */
         System.err.println(m);
     }
+
+    //Overload report_error method so that custom errors also receive line and column numbers
+    public void report_error(String message, int line, int col) {
+       /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+        StringBuffer m = new StringBuffer("Error");
+
+       if (line >= 0) {                
+         /* Add to the end of the StringBuffer error message
+         the line number of the error in the input. */
+         m.append(" in line "+(line+1));            
+                
+         if (col >= 0) {                    
+            /* Add to the end of the StringBuffer error message
+               the column number of the error in the input. */
+            m.append(", column "+(col+1));
+         }
+       }
+
+       /* Add to the end of the StringBuffer error message created in
+          this method the message that was passed into this method. */
+       m.append(" : "+message);
+   
+       /* Print the contents of the StringBuffer 'm', which contains
+          an error message, out on a line. */
+       System.err.println(m);
+    }
    
     /* Change the method report_fatal_error so when it reports a fatal
        error it will display the line and column number of where the
@@ -159,15 +185,15 @@ dec         ::= varDec:d
                  {: RESULT = f; :}
                ;
 
+/*| error: e SEMI
+                 {: 
+                  parser.report_error("Invalid variable declaration", eleft, eright); 
+                  RESULT = new ErrorDec(eleft, eright);
+                 :} */
 //<var-declaration> -> <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
-// Error detection rule, omitted for the time being
-/*              | error: e SEMI
-                 {: parser.report_error("invalid", e); 
-                 :}
-                 */
 varDec     ::= nameTy:t ID:i SEMI 
                  {: if(NameTy.VOID == t.type){
-                      parser.report_error("Void is not a valid type", t);
+                      parser.report_error(i + ", type cannot be 'void'", tleft, tright);
                       RESULT = new ErrorDec(tleft, tright);
                     } else {
                       RESULT = new SimpleDec(tleft, tright, t, i);
@@ -175,17 +201,17 @@ varDec     ::= nameTy:t ID:i SEMI
                  :}
                | nameTy:t ID:i LBRACKET NUM:n RBRACKET SEMI
                  {: if(NameTy.VOID == t.type){
-                      parser.report_error("Void is not a valid type", t);
+                      parser.report_error(i + ", type cannot be 'void'", tleft, tright);
                       RESULT = new ErrorDec(tleft, tright);
                     } else {                      
                       RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
                   :}  
-               | error: e SEMI
+               | nameTy:t ID:i LBRACKET RBRACKET SEMI
                  {: 
-                  parser.report_error("invalid", e); 
-                  RESULT = new ErrorDec(eleft, eright);
-                 :}             
+                  parser.report_error("Must define array size at declaration", tleft, tright); 
+                  RESULT = new ErrorDec(tleft, tright);
+                 :}                            
                ;
 
 //<type-specifier> -> int  | void
@@ -195,9 +221,19 @@ nameTy      ::= INT:n
                  {: RESULT = new NameTy(vleft, vright, NameTy.VOID); :}
                ;
 
+/*
+| nameTy:t ID:i LPAREN RPAREN compStmt:c
+                  {: 
+                     parser.report_error("Function \'" + i + "\' parameters cannot be unspecified", tleft, tright);
+                     RESULT = new ErrorFunctionDec(tleft, tright);
+                  :}
+                  */
 // <fun-declaration> -> <type-specifier> ID ( <params> ) <compound-stmt>
+/* Errors: 
+- declaration with unspecified parameters
+*/
 funDec      ::= nameTy:t ID:i LPAREN params:p RPAREN compStmt:c
-                 {: RESULT = new FunctionDec(tleft, tright, t, i, p, c); :}
+                 {: RESULT = new FunctionDec(tleft, tright, t, i, p, c); :}                              
                ;
 
 // <params> -> <param-list> | void
@@ -241,7 +277,6 @@ compStmt     ::= LBRACE:lb locDec:ld stmtList:s RBRACE
                ;
 
 //  <local-declarations> -> <local-declarations> <var-declaration> | epsilon
-//TODO: Fix empty production
 locDec       ::= locDec:d1 varDec:d2
                  {: VarDecList t = d1; 
                     if(d1 == null){
@@ -259,8 +294,6 @@ locDec       ::= locDec:d1 varDec:d2
                ;
 
 // <statement-list> -> <statement-list> <statement> | epsilon
-//TODO: Fix empty production
-// {: RESULT = new ExpList(null, null); :}
 stmtList      ::= stmtList:s1 stmt:s2
                  {: ExpList t = s1; 
                     if(s1 == null){
@@ -296,10 +329,18 @@ expStmt       ::= exp:e SEMI
                ;
 
 // <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
+/* Errors:
+- No 'else' without 'if'
+*/
 selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new IfExp(ileft, iright, e, s , null); :}
                | IF:i LPAREN exp:e RPAREN stmt:s1 ELSE stmt:s2
                   {: RESULT = new IfExp(ileft, iright, e, s1, s2); :}
+               | ELSE stmt:s
+                  {: 
+                     parser.report_error("\'Else\' with no corresponding \'if\'", sleft, sright);
+                     RESULT = new ErrorExp(sleft, sright);
+                  :}            
                ;
 
 // <iteration-stmt> -> while ( <expression> ) <statement>
@@ -313,12 +354,13 @@ returnStmt     ::= RETURN:r exp:e SEMI
                | RETURN:r SEMI
                   {: RESULT = new ReturnExp(rleft, rright, null); :}
                ;
-
+                
 // <expression> -> <var> = <expression> | <simple-expression>
 exp           ::= var:v ASSIGN exp:e 
                   {: RESULT = new AssignExp(vleft, vright, v, e); :}
                | simpExp:e
                   {: RESULT = e; :}
+               
                ;
 
 // <var> -> ID | ID [ <expression> ]
@@ -396,8 +438,6 @@ call          ::= ID:i LPAREN args:a RPAREN
                ;
 
 // <args> -> <arg-list> | epsilon
-//TODO FIx empty production
-// {: RESULT = new ExpList(null, null); :}
 args         ::= argList:a
                   {: RESULT = a; :}
                |  {: RESULT = new ExpList(null, null); :}
