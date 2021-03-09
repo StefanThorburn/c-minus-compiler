@@ -1,8 +1,8 @@
 /*
 Errors in this file:
 - Declaring a variable with type 'void'
-- Declaring an array with an undeclared size
-- assigning 3 to a variable with type void -- though this isn't something checked for in this stage as we do not match statements to declarations.
+- Declaring an array with an undefined size
+- assigning 3 to a variable with type void -- though this isn't checked in this stage as we do not match statements to declarations.
 - 'else' without a corresponding 'if'
 */
 

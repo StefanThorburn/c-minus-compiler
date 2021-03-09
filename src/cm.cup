@@ -110,14 +110,12 @@ non terminal CompoundExp compStmt;
 
 non terminal ExpList args, argList, stmtList;
 non terminal Exp exp, stmt, expStmt, addExp, simpExp, selStmt;
-//non terminal Exp term, factor;
 non terminal WhileExp iterStmt;
 non terminal ReturnExp returnStmt;
 
 non terminal Var var;
 non terminal CallExp call;
 non terminal Integer relop; 
-//non terminal Integer mulop, addop;
 
 
 precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
@@ -129,24 +127,12 @@ precedence right ASSIGN;
    
 start with program;
 
-/*
-program1     ::= exp:e 
-                 {: RESULT = e; :}
-               ;
-*/
-
 // <program> -> <declaration-list>
 program	     ::= decList:d
                  {: RESULT = d; :}
                ;
 
 //<declaration-list> -> <declaration-list> <declaration> | <declaration>
-// Error detection rule, omitted for the time being
-/*            | error SEMI dec:d
-                 {: parser.report_error("invalid", null); 
-                    RESULT = new DecList(d, null); 
-                 :}
-                 */
 decList     ::= decList:d1 dec:d2 
                  {: DecList t = d1;
                     if(d1 == null){
@@ -171,12 +157,12 @@ dec         ::= varDec:d
                  {: RESULT = f; :}
                ;
 
-/*| error: e SEMI
-                 {: 
-                  parser.report_error("Invalid variable declaration", eleft, eright); 
-                  RESULT = new ErrorDec(eleft, eright);
-                 :} */
 //<var-declaration> -> <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
+/* Errors
+- Cannot have void type
+- Cannot have undefined array size or non-integer array size
+- variable name must be an ID
+*/
 varDec     ::= nameTy:t ID:i SEMI 
                  {: if(NameTy.VOID == t.type){
                       parser.report_error(i + ", type cannot be 'void'", tleft, tright);
@@ -197,7 +183,17 @@ varDec     ::= nameTy:t ID:i SEMI
                  {: 
                   parser.report_error("Array size must be defined at declaration", tleft, tright); 
                   RESULT = new ErrorDec(tleft, tright);
+                 :}    
+               | nameTy:t ID:i LBRACKET ID:i2 RBRACKET SEMI
+                 {: 
+                  parser.report_error("Array size must be an integer", i2left, i2right); 
+                  RESULT = new ErrorDec(i2left, i2right);
                  :}                            
+               | nameTy:t error:e SEMI
+                 {: 
+                  parser.report_error("Invalid variable name", eleft, eright); 
+                  RESULT = new ErrorDec(eleft, eright);
+                 :}
                ;
 
 //<type-specifier> -> int  | void
@@ -292,7 +288,7 @@ stmtList      ::= stmtList:s1 stmt:s2
                       RESULT = s1;
                     }
                  :}
-                | {: RESULT = null; :}
+                | {: RESULT = null; :}                
                ;
 
 // <statement> -> <expression-stmt> | <compound-stmt> | <selection-stmt> | <iteration-stmt> | <return-stmt>
@@ -322,11 +318,6 @@ expStmt       ::= exp:e SEMI
 // <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
 /* Errors:
 - No 'else' without 'if'
-
-| IF:i stmt:s
-                  {: 
-                     parser.report_error("\'If\' with no condition", sleft, sright);
-                  :}
 */
 selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new IfExp(ileft, iright, e, s , null); :}
@@ -338,7 +329,7 @@ selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                      RESULT = new ErrorExp(ileft, iright);
                   :}     
                | IF:i LPAREN error:e RPAREN stmt:s
-                  {: parser.report_error("Invalid Expression statement inside IF ", eleft, eright);
+                  {: parser.report_error("Invalid 'If' condition", eleft, eright);
                      RESULT = new IfExp(ileft, iright, new ErrorExp(eleft, eright), s , null); :}            
                ;
 
@@ -346,7 +337,7 @@ selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
 iterStmt       ::= WHILE:w LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new WhileExp(wleft, wright, e, s); :}
                | WHILE:w LPAREN error:e RPAREN stmt:s
-                  {: parser.report_error("Invalid Expression statement inside WHILE ", eleft, eright);
+                  {: parser.report_error("Invalid 'While' loop condition", eleft, eright);
                      RESULT = new WhileExp(wleft, wright, new ErrorExp(eleft, eright), s); :}
                ;
 
@@ -362,7 +353,11 @@ exp           ::= var:v ASSIGN exp:e
                   {: RESULT = new AssignExp(vleft, vright, v, e); :}
                | simpExp:e
                   {: RESULT = e; :}
-               
+               | NUM:n ASSIGN exp:e
+                  {:
+                     parser.report_error("Attempt to assign to constant value", nleft, nright);
+                     RESULT = new AssignExp(nleft, nright, null, e);
+                  :}
                ;
 
 // <var> -> ID | ID [ <expression> ]
@@ -372,7 +367,7 @@ var            ::= ID:i
                   {: RESULT = new IndexVar(ileft, iright, i, e); :}
                | ID:i LBRACKET error:e RBRACKET
                   {: 
-                     parser.report_error("Invalid array index", eleft, eright);
+                     parser.report_error("Attempt to access invalid array index", eleft, eright);
                      RESULT = new IndexVar(ileft, iright, i, new ErrorExp(eleft, eright)); 
                   :}
                ;
@@ -385,7 +380,7 @@ simpExp       ::= addExp:e1 relop:a addExp:e2
                   {: RESULT = e; :}
                | addExp:e1 relop:a error:e2
                   {: 
-                     parser.report_error("Invalid simple expression! Should be a valid expression on the right!", e2left, e2right);
+                     parser.report_error("Invalid right operand", e2left, e2right);
                      RESULT = new OpExp(e1left, e1right, e1, a, new ErrorExp(e2left, e2right)); 
                   :}
                ;
@@ -466,45 +461,3 @@ argList      ::= argList: a COMMA exp:e
                      RESULT = new ExpList(new ErrorExp(eleft, eright), null); 
                   :}
                ;
-
-// Pre-simplified grammar
-/*
-// <additive-expression> -> <additive-expression> <addop> <term> | <term>
-addExp       ::= addExp:e addop:a term:t
-                  {: RESULT = new OpExp(eleft, eright, e, a, t); :}
-               | term:t
-                  {: RESULT = t; :}
-               ;
-
-// <addop> -> + | -
-addop       ::= PLUS
-                  {: RESULT = OpExp.PLUS; :}
-               | MINUS
-                  {: RESULT = OpExp.MINUS; :}
-               ;
-
-// <term> -> <term> <mulop> <factor> | <factor>
-term        ::= term:t mulop:m factor:f
-                  {: RESULT = new OpExp(tleft, tright, t, m ,f); :}
-               | factor:f
-                  {: RESULT = f; :}
-               ;
- 
-//<mulop> -> * | /
-mulop       ::= MUL
-                  {: RESULT = OpExp.MUL; :}
-               | DIV
-                  {: RESULT = OpExp.DIV; :}
-               ;
-
-// <factor> -> ( <expression> ) | <var> | <call> | NUM
-factor       ::= LPAREN exp:e RPAREN
-                  {: RESULT = e; :}
-               | var:v
-                  {: RESULT = new VarExp(vleft, vright, v); :}
-               | call:c
-                  {: RESULT = c; :}
-               | NUM:n
-                  {: RESULT = new IntExp(nleft, nright, Integer.parseInt(n)); :}
-               ;
-*/
