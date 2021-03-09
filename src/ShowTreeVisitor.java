@@ -9,13 +9,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit (NameTy nameTy, int level ) {
-    //TODO: Complete stub
     indent(level);
     System.out.println(nameTy.toString());
   }
 
   public void visit (IndexVar var, int level ) {
-    //TODO: Complete stub
     indent(level);
     System.out.println( "IndexVar: " + var.name);
     level++;
@@ -25,13 +23,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit (SimpleVar var, int level ) {
-    //TODO: Complete stub
     indent(level);
     System.out.println( "SimpleVar: " + var.name);
   }
 
   public void visit (ArrayDec array, int level ) {
-    //TODO: Complete stub
     indent(level);
     System.out.println( "ArrayDec: " + array.type.toString() + " " + array.name + " [" + array.size.value + "]");
   }
@@ -42,7 +38,6 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }    
 
   public void visit (FunctionDec functionDec, int level ) {
-    //TODO: Complete stub
     indent(level);
     System.out.println( "FunctionDec: " + functionDec.result.toString() + " " + functionDec.func);
     level++;
@@ -51,7 +46,6 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit (SimpleDec dec, int level ) {
-    //TODO: Complete stub
     indent(level);
     if (dec.type.type != NameTy.VOID) {
       System.out.println( "SimpleDec: " + dec.type.toString() + " " + dec.name);
@@ -105,7 +99,6 @@ public class ShowTreeVisitor implements AbsynVisitor {
   }
 
   public void visit (CallExp exp, int level ) {
-    //TODO: Complete stub
     indent( level );
     System.out.println("CallExp: " + exp.func);    
     if (exp.args == null) {
