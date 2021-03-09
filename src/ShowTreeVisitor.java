@@ -94,7 +94,14 @@ public class ShowTreeVisitor implements AbsynVisitor {
     indent( level );
     System.out.println( "AssignExp: ");
     level++;
-    exp.lhs.accept( this, level );
+    if (exp.lhs != null) {
+      exp.lhs.accept( this, level );
+    }
+    else {
+      indent( level );
+      System.out.println( "ErrorVarExp");
+    }
+    
     exp.rhs.accept( this, level );
   }
 
