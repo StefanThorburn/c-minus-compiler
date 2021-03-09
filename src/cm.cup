@@ -275,29 +275,7 @@ locDec       ::= locDec:d1 varDec:d2
                 | {: RESULT = null; :}
                ;
 
-
-/*
-| stmtList:s1 error:e
-                  {:
-                     parser.report_error("Mixed declarations and code are not supported", eleft, eright);
-                     ExpList t = s1; 
-                     ErrorExp errExp = new ErrorExp(eleft, eright);
-
-                     if(s1 == null){
-                        s1 = new ExpList(errExp, null);
-                        RESULT = s1;
-                     } else {
-                        while(t.tail != null)
-                           t = t.tail;
-                        t.tail = new ExpList(errExp, null);
-                        RESULT = s1;
-                     }
-                  :}
-*/
 // <statement-list> -> <statement-list> <statement> | epsilon
-/* Errors:
-- Checks for mixed declarations (C- only allows varDecs at the top of a block, not mixed in with statements)
-*/
 stmtList      ::= stmtList:s1 stmt:s2
                  {: ExpList t = s1; 
                     if(s1 == null){
@@ -340,11 +318,6 @@ expStmt       ::= exp:e SEMI
 // <selection-stmt> -> if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement>
 /* Errors:
 - No 'else' without 'if'
-
-| IF:i stmt:s
-                  {: 
-                     parser.report_error("\'If\' with no condition", sleft, sright);
-                  :}
 */
 selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new IfExp(ileft, iright, e, s , null); :}
