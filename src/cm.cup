@@ -336,12 +336,18 @@ selStmt        ::= IF:i LPAREN exp:e RPAREN stmt:s
                   {: 
                      parser.report_error("\'Else\' with no corresponding \'if\'", ileft, iright);
                      RESULT = new ErrorExp(ileft, iright);
-                  :}            
+                  :}     
+               | IF:i LPAREN error:e RPAREN stmt:s
+                  {: parser.report_error("Invalid Expression statement inside IF ", eleft, eright);
+                     RESULT = new IfExp(ileft, iright, new ErrorExp(eleft, eright), s , null); :}            
                ;
 
 // <iteration-stmt> -> while ( <expression> ) <statement>
 iterStmt       ::= WHILE:w LPAREN exp:e RPAREN stmt:s
                   {: RESULT = new WhileExp(wleft, wright, e, s); :}
+               | WHILE:w LPAREN error:e RPAREN stmt:s
+                  {: parser.report_error("Invalid Expression statement inside WHILE ", eleft, eright);
+                     RESULT = new WhileExp(wleft, wright, new ErrorExp(eleft, eright), s); :}
                ;
 
 // <return-stmt> -> return <expression> ; | return ;
@@ -377,6 +383,11 @@ simpExp       ::= addExp:e1 relop:a addExp:e2
                   {: RESULT = new OpExp(e1left, e1right, e1, a, e2); :}
                | addExp:e
                   {: RESULT = e; :}
+               | addExp:e1 relop:a error:e2
+                  {: 
+                     parser.report_error("Invalid simple expression! Should be a valid expression on the right!", e2left, e2right);
+                     RESULT = new OpExp(e1left, e1right, e1, a, new ErrorExp(e2left, e2right)); 
+                  :}
                ;
 
 // <relop> -> <= | < | > | >= | == | !=
@@ -451,7 +462,7 @@ argList      ::= argList: a COMMA exp:e
                   {: RESULT = new ExpList(e, null); :}
                | error:e COMMA exp:e1
                   {: 
-                     parser.report_error("Invalid argument list", eleft, eright);
+                     parser.report_error("Invalid argument list in the function call", eleft, eright);
                      RESULT = new ExpList(new ErrorExp(eleft, eright), null); 
                   :}
                ;
