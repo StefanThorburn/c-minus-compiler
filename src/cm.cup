@@ -449,6 +449,11 @@ argList      ::= argList: a COMMA exp:e
                      }; :}
                | exp:e
                   {: RESULT = new ExpList(e, null); :}
+               | error:e COMMA exp:e1
+                  {: 
+                     parser.report_error("Invalid argument list", eleft, eright);
+                     RESULT = new ExpList(new ErrorExp(eleft, eright), null); 
+                  :}
                ;
 
 // Pre-simplified grammar
