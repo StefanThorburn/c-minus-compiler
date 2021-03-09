@@ -1,0 +1,9 @@
+/* 
+Errors:
+- argument list is not valid in the function call
+ */
+
+int test(int u, int v) {
+  if (v == 0) return u;
+  else return test(%v, u - u/v*v);
+}
