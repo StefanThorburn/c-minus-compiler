@@ -1,18 +1,18 @@
 /*
 Errors:
-- the array index is invalid (consists of an expression statement rather than an expression)
+- The second array declaration has an invalid size
+- the array access index is invalid (consists of a statement rather than an expression)
 - the function call is invalid (C- does not support modulus and so it is an error token)
-- the expression is invalid ("write" is not valid in C-)
 */
 void main (void) {
    int frog;
    int frogArray[10];
+   int toadArray[o23];
 
    frog = frogArray[frog < 3;];
    frogArray[1] = func(frog % 2);
 }
 
 int func (int num) {
-   write num;
    return num + 1;
 }

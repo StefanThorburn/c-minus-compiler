@@ -1,25 +1,21 @@
 /* 
 Errors:
 - argument list is not valid in the function call
-- checks if the right side of the simple expression has an error
-- checks fot invalid expression inside IF -> IF(expression)
-- - checks fot invalid expression inside WHILE -> WHILE(expression)
+- The boolean expression on line 16 has an invalid right operand
+- Invalid condition expression for the 'if' statement
+- Invalid condition expression for the 'while' loop
  */
 
 int gcd(int u, int v) {
   if (v == 0) return u;
-  else return gcd(%v, u - u/v*v);
+  else return gcd(v, u - u/v*v);
 }
 
-int test(int u, int v){
+int test (int u, int v) {
   int test;
   test = (u + w) > (%u);
 
-  if(%u + v){
-    u++;
-  }
+  if(%u + v) u+ 1;
 
-  while(%v!=null){
-    return v;
-  }
+  while(%v!=null) return v;
 }
