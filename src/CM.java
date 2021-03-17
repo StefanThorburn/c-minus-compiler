@@ -11,6 +11,7 @@ class CM {
     /* Start the parser */
     try {
       parser p = new parser(new Lexer(new FileReader(argv[0])));
+      // implement "-a" and "-s" options
       Absyn result = (Absyn)(p.parse().value);      
       if (SHOW_TREE && result != null) {
          System.out.println("The abstract syntax tree is:");
