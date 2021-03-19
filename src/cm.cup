@@ -109,18 +109,18 @@ non terminal VarDec param;
 non terminal CompoundExp compStmt;
 
 non terminal ExpList args, argList, stmtList;
-non terminal Exp exp, stmt, expStmt, addExp, simpExp, selStmt;
+non terminal Exp exp, stmt, expStmt, selStmt;
 non terminal WhileExp iterStmt;
 non terminal ReturnExp returnStmt;
 
 non terminal Var var;
 non terminal CallExp call;
-non terminal Integer relop; 
+//non terminal Integer relop; 
 
-
-precedence nonassoc LT, LE, GT, GE, EQ, NE, ELSE, RETURN; 
+precedence nonassoc LT, LE, GT, GE, EQ, NE, RETURN; 
 precedence left PLUS, MINUS;
 precedence left MUL, DIV;
+precedence left ELSE;
 precedence right ASSIGN;
 
 /* ----------------------------Grammar Section-------------------- */
@@ -349,28 +349,51 @@ returnStmt     ::= RETURN:r exp:e SEMI
                ;
                 
 // <expression> -> <var> = <expression> | <simple-expression>
+// <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
+// <relop> -> <= | < | > | >= | == | !=
+// <additive-expression> -> <additive-expression> <addop> <term> | <term>
+// <addop> -> + | -
+// <term> -> <term> <mulop> <factor> | <factor>
+// <mulop> -> * | /
+// <factor> -> ( <expression> ) | <var> | <call> | NUM
+// Simplified using precedence rules
 exp           ::= var:v ASSIGN exp:e 
                   {: RESULT = new AssignExp(vleft, vright, v, e); :}
-               | simpExp:e
+               | exp:e1 PLUS exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.PLUS, e2); :}
+               | exp:e1 MINUS exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.MINUS, e2); :}
+               | exp:e1 MUL exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.MUL, e2); :}
+               | exp:e1 DIV exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.DIV, e2); :}
+               | exp:e1 LE exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.LE, e2); :}
+               | exp:e1 LT exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.LT, e2); :}
+               | exp:e1 GT exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.GT, e2); :}
+               | exp:e1 GE exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.GE, e2); :}
+               | exp:e1 EQ exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.EQ, e2); :}
+               | exp:e1 NE exp:e2
+                  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.NE, e2); :}
+               | LPAREN exp:e RPAREN
                   {: RESULT = e; :}
+               | var:v
+                  {: RESULT = new VarExp(vleft, vright, v); :}
+               | call:c
+                  {: RESULT = c; :}
+               | NUM:n
+                  {: RESULT = new IntExp(nleft, nright, Integer.parseInt(n)); :}
                | NUM:n ASSIGN exp:e
                   {:
                      parser.report_error("Attempt to assign to constant value", nleft, nright);
                      RESULT = new AssignExp(nleft, nright, null, e);
                   :}
                ;
-
-// <var> -> ID | ID [ <expression> ]
-var            ::= ID:i
-                  {: RESULT = new SimpleVar(ileft, iright, i); :}
-               | ID:i LBRACKET exp:e RBRACKET
-                  {: RESULT = new IndexVar(ileft, iright, i, e); :}
-               | ID:i LBRACKET error:e RBRACKET
-                  {: 
-                     parser.report_error("Attempt to access invalid array index", eleft, eright);
-                     RESULT = new IndexVar(ileft, iright, i, new ErrorExp(eleft, eright)); 
-                  :}
-               ;
+/*
 
 // <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
 //Use the position of the left operand for the expression
@@ -422,6 +445,19 @@ addExp       ::= addExp:e1 PLUS addExp:e2
                   {: RESULT = c; :}
                | NUM:n
                   {: RESULT = new IntExp(nleft, nright, Integer.parseInt(n)); :}
+               ;
+*/
+
+// <var> -> ID | ID [ <expression> ]
+var            ::= ID:i
+                  {: RESULT = new SimpleVar(ileft, iright, i); :}
+               | ID:i LBRACKET exp:e RBRACKET
+                  {: RESULT = new IndexVar(ileft, iright, i, e); :}
+               | ID:i LBRACKET error:e RBRACKET
+                  {: 
+                     parser.report_error("Attempt to access invalid array index", eleft, eright);
+                     RESULT = new IndexVar(ileft, iright, i, new ErrorExp(eleft, eright)); 
+                  :}
                ;
 
 // <call> -> ID ( <args> )
