@@ -5,6 +5,11 @@ parser.java
 sym.java
 *~
 
+# Ignore results of execution
+*.abs
+*.sym
+*.tm
+
 # ignore ad-hoc tests, except for ones meant for demo / provided tests #
 tests/*
 !tests/fac.cm

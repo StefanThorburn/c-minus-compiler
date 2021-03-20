@@ -12,13 +12,11 @@ Where input_file is the relative path from the current directory (e.g. "tests/3.
 
 Run scanner only in root directory with
     'java -cp ./lib/cup.jar:./bin/ Scanner < input_file'
-    or
-    'bash ./cm.sh input_file -scanner'    
 
 Run parser in root directory with
-    'java -cp ./lib/cup.jar:./bin/ Main input_file'
+    'java -cp ./lib/cup.jar:./bin/ Main input_file [-s] [-a]'
     or
-    'bash ./cm.sh input_file'
+    'bash ./cm.sh input_file [-a] [-s]'
 
 Type make clean to remove generated files.
 
