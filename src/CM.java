@@ -55,24 +55,32 @@ class CM {
       // implement "-a" and "-s" options
       Absyn result = (Absyn)(p.parse().value);  
       
-      // If the '-a' flag is set, display the abstract syntax tree to a .abs file
-      if (SHOW_TREE && result != null) {
-        
-        System.out.println("Abstract syntax tree written to '" + FILE_NAME + ".abs'");
+      if (result != null) {
+        // If the '-a' flag is set, print the abstract syntax tree to a .abs file
+        if (SHOW_TREE) {
+          System.out.println("Abstract syntax tree written to '" + FILE_NAME + ".abs'");
 
-        //Redirect stdout
-        File absFile = new File(FILE_NAME + ".abs");
-        FileOutputStream absFos = new FileOutputStream(absFile);
-        PrintStream absPS = new PrintStream(absFos);
-        System.setOut(absPS);
+          //Redirect stdout
+          File absFile = new File(FILE_NAME + ".abs");
+          FileOutputStream absFos = new FileOutputStream(absFile);
+          PrintStream absPS = new PrintStream(absFos);
+          System.setOut(absPS);
 
-        // Print abstract syntax tree to FILE_NAME.abs in current directory
-        SemanticAnalyzer visitor = new SemanticAnalyzer();
-        result.accept(visitor, 0); 
+          // Print abstract syntax tree to FILE_NAME.abs in current directory
+          ShowTreeVisitor visitor = new ShowTreeVisitor();
+          result.accept(visitor, 0); 
 
-        //Reset stdout
-        System.setOut(console);
+          //Reset stdout
+          System.setOut(console);
+        }
+
+        // Perform semantic analysis
+        SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
+        result.accept(analyzerVisitor, 0);
+
       }
+
+      // Perform semantic analysis 
     } catch (Exception e) {
       /* do cleanup here -- possibly rethrow e */
       e.printStackTrace();
