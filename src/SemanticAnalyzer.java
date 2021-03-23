@@ -12,6 +12,40 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   //Accessed by the utility methods for “insert”, ”lookup”, and “delete” operations
+  private void insert(Dec newDec, int level) {
+    String name = newDec.name;
+    NodeType toInsert = new NodeType(name, newDec, level);
+
+    //Check if there's already a declaration with this name
+    if (table.containsKey(name)) {
+      //If there is, add the new one to the list
+
+      ArrayList<NodeType> nodes = table.get(name);
+      NodeType n;
+
+      //TODO: If there are two variables with the same name and the same scope, that is not permissible
+
+      //Sort the list from most specific scope to least specific (global)
+      //Also sort from most recent declaration to least recent (due to >=)
+      for (int i = 0; i < nodes.size(); i++) {        
+        n = nodes.get(i);
+        if (toInsert.level >= n.level) {
+          nodes.add(i, toInsert);
+          break;
+        }
+        //It was smaller than every element
+        else if (i == nodes.size() - 1) {
+          nodes.add(toInsert);
+          break;
+        }
+      }
+    }
+    else {
+      ArrayList<NodeType> nodes = new ArrayList<NodeType>();
+      nodes.add(toInsert);
+      table.put(name, nodes);
+    }
+  }
 
   //Add boolean methods such as “isInteger(Dec dtype)” in SemanticAnalyzer.java to simplify the code for type checkin:
   //Given “int x[10]”, “x[2]” is an integer, and given “int input(void)”, “input()” is an integer
@@ -53,7 +87,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   public void visit (FunctionDec functionDec, int level ) {
     indent(level);
-    System.out.println( "FunctionDec: " + functionDec.result.toString() + " " + functionDec.func);
+    System.out.println( "FunctionDec: " + functionDec.type.toString() + " " + functionDec.name);
     level++;
     functionDec.params.accept(this, level);
     functionDec.body.accept(this, level);
