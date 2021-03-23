@@ -7,7 +7,17 @@ public class ErrorDec extends VarDec {
       this.col = col;
    }
 
+   public ErrorDec(int row, int col, NameTy type, String name) {
+      this(row, col);
+      this.type = type;
+      this.name = name;
+   }
+
    public void accept( AbsynVisitor visitor, int level ) {
       visitor.visit( this, level );
+   }
+
+   public String toString() {
+      return "(ERROR_DEC): " + type;
    }
 }

@@ -166,7 +166,7 @@ dec         ::= varDec:d
 varDec     ::= nameTy:t ID:i SEMI 
                  {: if(NameTy.VOID == t.type){
                       parser.report_error(i + ", type cannot be 'void'", tleft, tright);
-                      RESULT = new ErrorDec(tleft, tright);
+                      RESULT = new ErrorDec(tleft, tright, t, i);
                     } else {
                       RESULT = new SimpleDec(tleft, tright, t, i);
                     }
@@ -174,7 +174,7 @@ varDec     ::= nameTy:t ID:i SEMI
                | nameTy:t ID:i LBRACKET NUM:n RBRACKET SEMI
                  {: if(NameTy.VOID == t.type){
                       parser.report_error(i + ", type cannot be 'void'", tleft, tright);
-                      RESULT = new ErrorDec(tleft, tright);
+                      RESULT = new ErrorDec(tleft, tright, t, i);
                     } else {                      
                       RESULT = new ArrayDec(tleft, tright, t, i, new IntExp(nleft, nright, Integer.parseInt(n)));         
                     }
@@ -182,17 +182,17 @@ varDec     ::= nameTy:t ID:i SEMI
                | nameTy:t ID:i LBRACKET RBRACKET SEMI
                  {: 
                   parser.report_error("Array size must be defined at declaration", tleft, tright); 
-                  RESULT = new ErrorDec(tleft, tright);
+                  RESULT = new ErrorDec(tleft, tright, t, i);
                  :}    
                | nameTy:t ID:i LBRACKET ID:i2 RBRACKET SEMI
                  {: 
                   parser.report_error("Array size must be an integer", i2left, i2right); 
-                  RESULT = new ErrorDec(i2left, i2right);
+                  RESULT = new ErrorDec(i2left, i2right, t, i);
                  :}                            
                | nameTy:t error:e SEMI
                  {: 
                   parser.report_error("Invalid variable name", eleft, eright); 
-                  RESULT = new ErrorDec(eleft, eright);
+                  RESULT = new ErrorDec(eleft, eright, t, "(ERROR)");
                  :}
                ;
 
