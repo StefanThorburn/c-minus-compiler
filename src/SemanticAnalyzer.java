@@ -47,6 +47,24 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
   }
 
+  private ArrayList<NodeType> lookup (String name) {
+    ArrayList<NodeType> nodes = table.get(name);
+    return nodes;
+  }
+
+  //Deletes the NodeType with the specified name and level from the symbol table
+  private void delete (String name, int level) {
+    if (table.containsKey(name)) {
+      ArrayList<NodeType> nodes = table.get(name);
+      for (NodeType n : nodes) {
+        if (n.name.equals(name) && n.level == level) {
+          nodes.remove(n);
+          break;
+        }
+      }
+    }
+  }
+
   //Add boolean methods such as “isInteger(Dec dtype)” in SemanticAnalyzer.java to simplify the code for type checkin:
   //Given “int x[10]”, “x[2]” is an integer, and given “int input(void)”, “input()” is an integer
 
