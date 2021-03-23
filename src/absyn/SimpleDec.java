@@ -1,8 +1,6 @@
 package absyn;
 
 public class SimpleDec extends VarDec {
-   public NameTy type;
-   public String name;
 
    public SimpleDec(int row, int col, NameTy type, String name) {
       this.row = row;
