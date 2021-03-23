@@ -1,11 +1,17 @@
+import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import absyn.*;
 
 public class SemanticAnalyzer implements AbsynVisitor {
 
   HashMap<String, ArrayList<NodeType>> table;
+
+  private static final String BLOCK_ENTRY = "Entering a new block: ";
+  private static final String BLOCK_EXIT = "Leaving the block";
 
   public SemanticAnalyzer() {
     table = new HashMap<String, ArrayList<NodeType>>();
@@ -52,6 +58,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
     return nodes;
   }
 
+  /*
   //Deletes the NodeType with the specified name and level from the symbol table
   private void delete (String name, int level) {
     if (table.containsKey(name)) {
@@ -64,6 +71,34 @@ public class SemanticAnalyzer implements AbsynVisitor {
       }
     }
   }
+*/
+
+  private void deleteScope(int levelToRemove) {
+
+    //Iterate over the symbol table using its entry set
+    Iterator<Map.Entry<String, ArrayList<NodeType>>> it = table.entrySet().iterator();
+
+    while (it.hasNext()) {
+      //Pair refers to a key-value pair in the hashmap
+      Map.Entry<String, ArrayList<NodeType>> pair = (Map.Entry<String, ArrayList<NodeType>>) it.next();
+      List<NodeType> nodes = pair.getValue();
+
+      // For each key, check all the nodes, printing and removing those at the current scope
+      for (Iterator<NodeType> nodeIter = nodes.iterator(); nodeIter.hasNext();) {
+        NodeType n = nodeIter.next();
+        if (n.level == levelToRemove) {
+          indent(levelToRemove);
+          System.out.println(n);
+          nodeIter.remove();
+        }
+      }
+
+      //if the current key no longer has any values, remove it from the hashmap
+      if (nodes.isEmpty()) {
+        it.remove();
+      }
+    }
+}
 
   //Add boolean methods such as “isInteger(Dec dtype)” in SemanticAnalyzer.java to simplify the code for type checkin:
   //Given “int x[10]”, “x[2]” is an integer, and given “int input(void)”, “input()” is an integer
@@ -75,66 +110,66 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit (NameTy nameTy, int level ) {
-    indent(level);
-    System.out.println(nameTy.toString());
+
   }
 
   public void visit (IndexVar var, int level ) {
-    indent(level);
-    System.out.println( "IndexVar: " + var.name);
-    level++;
-    indent(level);
-    System.out.println("Index: ");
-    var.index.accept( this, level + 1);
+    var.index.accept( this, level);
   }
 
   public void visit (SimpleVar var, int level ) {
-    indent(level);
-    System.out.println( "SimpleVar: " + var.name);
+
   }
 
   public void visit (ArrayDec array, int level ) {
-    indent(level);
-    System.out.println( "ArrayDec: " + array.type.toString() + " " + array.name + " [" + array.size.value + "]");
+    insert(array, level);
+
   }
 
-  public void visit (ErrorDec compoundList, int level ) {
-    indent(level);
-    System.out.println("ErrorDec");
+  public void visit (ErrorDec badDec, int level ) {
+    insert(badDec, level);
   }    
 
   public void visit (FunctionDec functionDec, int level ) {
     indent(level);
-    System.out.println( "FunctionDec: " + functionDec.type.toString() + " " + functionDec.name);
+    System.out.println("Entering scope for function: " + functionDec.name);
+    insert(functionDec, level);
+
     level++;
     functionDec.params.accept(this, level);
     functionDec.body.accept(this, level);
+
+    deleteScope(level);
+    indent(level - 1);
+    System.out.println("Leaving the function scope");
   }
 
   public void visit (SimpleDec dec, int level ) {
-    indent(level);
-    if (dec.type.type != NameTy.VOID) {
-      System.out.println( "SimpleDec: " + dec.type.toString() + " " + dec.name);
+
+    //Don't insert a declaration into the symbol table in the case of func (void)
+    if (dec.name != null && dec.type.type != NameTy.VOID) {
+      insert(dec, level);
     }
-    else {
-      System.out.println( "SimpleDec: " + dec.type.toString());
-    }
+    
   }  
 
   public void visit (DecList decList, int level ) {
     indent( level );
-    System.out.println("Declaration list:");
+    System.out.println("Entering the global scope:");
+    
     level++;
     while( decList != null ) {
       decList.head.accept( this, level );
       decList = decList.tail;
     } 
+
+    deleteScope(level);
+    indent(level - 1);
+    System.out.println("Leaving the global scope");
   }
 
   public void visit (VarDecList decList, int level ) {
-    indent( level );
-    System.out.println("Variable Declaration list: ");
-    level++;
+
     while( decList != null ) {
       decList.head.accept( this, level );
       decList = decList.tail;
@@ -142,13 +177,9 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit( ExpList expList, int level ) {
-    indent( level );
-    if (expList.head == null) {
-      System.out.println("Empty ExpList");
-    }
-    else {
-      System.out.println("Expression list: ");
-      level++;
+
+    if (expList.head != null) {
+
       while( expList != null ) {
         expList.head.accept( this, level );
         expList = expList.tail;
@@ -157,143 +188,129 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }  
 
   public void visit( AssignExp exp, int level ) {
-    indent( level );
-    System.out.println( "AssignExp: ");
-    level++;
+
     if (exp.lhs != null) {
       exp.lhs.accept( this, level );
-    }
-    else {
-      indent( level );
-      System.out.println( "ErrorVarExp");
     }
     
     exp.rhs.accept( this, level );
   }
 
   public void visit (CallExp exp, int level ) {
-    indent( level );
-    System.out.println("CallExp: " + exp.func);    
-    if (exp.args == null) {
-      level++;
-      indent(level);
-      System.out.println("ErrorArgs");
-    }
-    else if (exp.args.head != null) {
-      level++;
+
+    if (exp.args != null && exp.args.head != null) {
       exp.args.accept(this, level);
     }    
   }
   
   public void visit (CompoundExp compoundList, int level ) {
-    indent(level);
-    System.out.println("Compound statement list: ");    
+   
     if (compoundList.decs != null) {
-      compoundList.decs.accept( this, level+1 );
+      compoundList.decs.accept( this, level );
     }
     if (compoundList.exps != null) {
-      compoundList.exps.accept( this, level+1 );
+      compoundList.exps.accept( this, level );
     }    
   }    
 
   public void visit (ErrorExp compoundList, int level ) {
-    indent(level);
-    System.out.println("ErrorExp");
+
   }    
 
   public void visit( IfExp exp, int level ) {
-    indent( level );
-    System.out.println( "IfExp: " );
-    level++;    
+
     exp.test.accept( this, level );
-    
-    indent( level );
-    System.out.println("then: ");
+
+    indent(level);
+    System.out.println(BLOCK_ENTRY + " (if)");
+
     exp.thenpart.accept( this, level +1);
+
+    deleteScope(level + 1);
+    indent(level);
+    System.out.println(BLOCK_EXIT);
 
     if (exp.elsepart != null ) {
       indent( level );
-      System.out.println("else: ");
+      System.out.println(BLOCK_ENTRY + " (else)");
+
       exp.elsepart.accept( this, level +1);
+
+      deleteScope(level + 1);
+      indent(level);
+      System.out.println(BLOCK_EXIT);
     }       
     
   }
 
   public void visit( IntExp exp, int level ) {
-    indent( level );
-    System.out.println( "IntExp: " + exp.value ); 
+    
   }
 
   public void visit (NilExp exp, int level ) {
-    indent(level);
-    System.out.println("NilExp");
+    
   }
 
   public void visit( OpExp exp, int level ) {
-    indent( level );
-    System.out.print( "OpExp: " ); 
-    switch( exp.op ) {
-      case OpExp.PLUS:
-        System.out.println( " + " );
-        break;
-      case OpExp.MINUS:
-        System.out.println( " - " );
-        break;
-      case OpExp.MUL:
-        System.out.println( " * " );
-        break;
-      case OpExp.DIV:
-        System.out.println( " / " );
-        break;
-      case OpExp.LT:
-        System.out.println( " < " );
-        break;
-      case OpExp.LE:
-        System.out.println( " <= " );
-        break;
-      case OpExp.GT:
-        System.out.println( " > " );
-        break;
-      case OpExp.GE:
-        System.out.println( " >= " );
-        break;
-      case OpExp.EQ:
-        System.out.println( " == " );
-        break;
-      case OpExp.NE:
-        System.out.println( " != " );
-        break;
-      default:
-        System.out.println( "Unrecognized operator at line " + exp.row + " and column " + exp.col);
-    }
-    level++;
+
+    // switch( exp.op ) {
+    //   case OpExp.PLUS:
+    //     System.out.println( " + " );
+    //     break;
+    //   case OpExp.MINUS:
+    //     System.out.println( " - " );
+    //     break;
+    //   case OpExp.MUL:
+    //     System.out.println( " * " );
+    //     break;
+    //   case OpExp.DIV:
+    //     System.out.println( " / " );
+    //     break;
+    //   case OpExp.LT:
+    //     System.out.println( " < " );
+    //     break;
+    //   case OpExp.LE:
+    //     System.out.println( " <= " );
+    //     break;
+    //   case OpExp.GT:
+    //     System.out.println( " > " );
+    //     break;
+    //   case OpExp.GE:
+    //     System.out.println( " >= " );
+    //     break;
+    //   case OpExp.EQ:
+    //     System.out.println( " == " );
+    //     break;
+    //   case OpExp.NE:
+    //     System.out.println( " != " );
+    //     break;
+    //   default:
+    //     System.out.println( "Unrecognized operator at line " + exp.row + " and column " + exp.col);
+    // }
+
     exp.left.accept( this, level );
     exp.right.accept( this, level );
   }
 
   public void visit (ReturnExp exp, int level ) {
-    indent(level);
-    System.out.println("ReturnExp: ");
-    exp.exp.accept(this, level+1);
+     
+    exp.exp.accept(this, level);
   }  
 
   public void visit( VarExp exp, int level ) {
-    indent( level );
-    System.out.println( "VarExp: ");
-    exp.variable.accept(this, level+1);
+     
+    exp.variable.accept(this, level);
   }
 
   public void visit (WhileExp exp, int level ) {
     indent(level);
-    System.out.println("Loop");
+    System.out.println(BLOCK_ENTRY + " (loop)");
     
-    level++;
-    indent(level);
-    System.out.println("Condition: ");
     exp.test.accept(this, level+1);
-
-    indent(level);
-    System.out.println("Body: ");
     exp.body.accept(this, level+1);
+
+    deleteScope(level + 1);
+    indent(level);
+    System.out.println(BLOCK_EXIT);
   }
 }

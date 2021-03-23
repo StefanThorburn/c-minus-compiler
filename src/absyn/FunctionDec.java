@@ -17,4 +17,23 @@ public class FunctionDec extends Dec {
    public void accept( AbsynVisitor visitor, int level ) {
       visitor.visit( this, level );
    }
+
+   public String toString() {
+      VarDecList dummy = params;
+
+      StringBuilder sb = new StringBuilder(this.name + ": (");
+      while( dummy != null ) {
+         sb.append(dummy.head.type);
+         dummy = dummy.tail;
+
+         if (dummy != null) {
+            sb.append(", ");
+         }
+       } 
+       sb.append(") => ");
+
+       sb.append(type);
+      
+      return sb.toString();
+   }
 }
