@@ -1,8 +1,17 @@
-//array range/index must be int
+/*
+array range/index must be int
+In this situation, foo returns void. a then attempts to access an index with that result
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
 
 void main(void) { 
     int a[2];  
     int x; 
     a[x] = 1;
-    a[foo()] = 2; // assuming void foo()
+    a[foo()] = 2;
 }

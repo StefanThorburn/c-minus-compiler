@@ -1,4 +1,12 @@
-//match two operands
+/*
+match two operands
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
 
 int fun(int fff ) {
      int x; 
