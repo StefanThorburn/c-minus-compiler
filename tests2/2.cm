@@ -1,0 +1,6 @@
+//match two sides of an assignment
+
+void main(void) {
+    int x; 
+    x = foo();
+}

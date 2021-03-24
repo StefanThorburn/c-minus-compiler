@@ -1,0 +1,7 @@
+//function calls and return exps
+
+void funtwo(void) {
+     int x;
+     x = 2;
+     return x;
+}
