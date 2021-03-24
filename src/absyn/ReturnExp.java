@@ -7,6 +7,7 @@ public class ReturnExp extends Exp {
         this.row = row;
         this.col = col;
         this.exp = exp;
+        dType = null;
     }
 
     public void accept( AbsynVisitor visitor, int level ) {

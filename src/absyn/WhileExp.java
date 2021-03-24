@@ -9,6 +9,7 @@ public class WhileExp extends Exp {
         this.col=col;
         this.test=test;
         this.body = body;
+        dType = null;
     }
 
     public void accept( AbsynVisitor visitor, int level ) {

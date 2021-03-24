@@ -9,6 +9,7 @@ public class AssignExp extends Exp {
     this.col = col;
     this.lhs = lhs;
     this.rhs = rhs;
+    dType = null;
   }
   
   public void accept( AbsynVisitor visitor, int level ) {

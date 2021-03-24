@@ -22,6 +22,7 @@ public class OpExp extends Exp {
     this.op = op;
     this.left = left;
     this.right = right;
+    dType = null;
   }
 
   public void accept( AbsynVisitor visitor, int level ) {
