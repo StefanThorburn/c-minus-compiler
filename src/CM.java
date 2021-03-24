@@ -88,9 +88,10 @@ class CM {
           PrintStream symPS = new PrintStream(symFos);
           System.setOut(symPS);
         }        
-
-        //Toss stdout output into the void
-        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        else {
+          //Toss stdout output into the void
+          System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        }        
 
         // Perform semantic analysis
         SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
