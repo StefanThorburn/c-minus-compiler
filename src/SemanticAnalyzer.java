@@ -17,6 +17,12 @@ public class SemanticAnalyzer implements AbsynVisitor {
     table = new HashMap<String, ArrayList<NodeType>>();
   }
 
+  private void printError (int row, int col, String msg) {
+    StringBuilder sb = new StringBuilder("Error at line " + row + ", col " + col + ": ");
+    sb.append(msg);
+    System.err.println(sb.toString());
+  }
+
   //Accessed by the utility methods for “insert”, ”lookup”, and “delete” operations
   private void insert(Dec newDec, int level) {
     String name = newDec.name;
@@ -36,10 +42,14 @@ public class SemanticAnalyzer implements AbsynVisitor {
       for (int i = 0; i < nodes.size(); i++) {        
         n = nodes.get(i);
         if (toInsert.level >= n.level) {
+          if (toInsert.level == n.level && toInsert.name.equals(n.name)) {
+            //Redeclaration error: same variable name used in 2 declarations in same scope
+            printError(toInsert.def.row, toInsert.def.col, "redeclaration of variable '" + toInsert.name +"'");
+          }
           nodes.add(i, toInsert);
           break;
         }
-        //It was smaller than every element
+        //Scope is smaller than every element
         else if (i == nodes.size() - 1) {
           nodes.add(toInsert);
           break;
@@ -53,25 +63,26 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
   }
 
-  private ArrayList<NodeType> lookup (String name) {
-    ArrayList<NodeType> nodes = table.get(name);
-    return nodes;
-  }
+  //Returns the most type of the most recent declaration of a particular variable name
+  //Or the type of a function
+  private int lookup (String name, Boolean isFunc, int row, int col) {
+    
+    for (Iterator<NodeType> iter = table.get(name).iterator(); iter.hasNext();) {
+      NodeType n = iter.next();
 
-  /*
-  //Deletes the NodeType with the specified name and level from the symbol table
-  private void delete (String name, int level) {
-    if (table.containsKey(name)) {
-      ArrayList<NodeType> nodes = table.get(name);
-      for (NodeType n : nodes) {
-        if (n.name.equals(name) && n.level == level) {
-          nodes.remove(n);
-          break;
-        }
+      //If searching for a function, skip over any non-function matches
+      if (isFunc && !(n.def.getClass().getName().equals("FunctionDec"))) {
+        continue;
+      }
+      else {
+        //Otherwise return the first one
+        return n.def.type.type;
       }
     }
+
+    printError(row, col, "undefined reference to '" + name + "'");
+    return NodeType.NO_DEC;
   }
-*/
 
   private void deleteScope(int levelToRemove) {
 
