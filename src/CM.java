@@ -86,6 +86,7 @@ class CM {
         }
         else {
           //Toss stdout output into the void
+          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n"+ "Use [-s] flag to print the symbol table");
           System.setOut(new PrintStream(OutputStream.nullOutputStream()));
         }      
 
