@@ -75,13 +75,18 @@ public class SemanticAnalyzer implements AbsynVisitor {
         continue;
       }
       else {
-        //Otherwise return the first one
-        return n.def.type.type;
+        //Otherwise return the first one, format depends on if its an array or not
+        if (n.def.getClass().getName().equals("ArrayDec") && n.def.type.type == NameTy.INT) {
+          return NameTy.INT_ARR;
+        }
+        else {
+          return n.def.type.type;
+        }        
       }
     }
 
     printError(row, col, "undefined reference to '" + name + "'");
-    return NodeType.NO_DEC;
+    return NameTy.NO_DEC;
   }
 
   private void deleteScope(int levelToRemove) {

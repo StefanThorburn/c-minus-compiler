@@ -23,7 +23,13 @@ public class FunctionDec extends Dec {
 
       StringBuilder sb = new StringBuilder(this.name + ": (");
       while( dummy != null ) {
-         sb.append(dummy.head.type);
+         //If the parameter is an int array, do this not-at-all-spaghetti-code workaround rather than printing the primitive type
+         if (dummy.head instanceof ArrayDec && dummy.head.type.type == NameTy.INT) {
+            sb.append(new NameTy(-1, -1, NameTy.INT_ARR));
+         }
+         else {
+            sb.append(dummy.head.type);
+         }         
          dummy = dummy.tail;
 
          if (dummy != null) {
