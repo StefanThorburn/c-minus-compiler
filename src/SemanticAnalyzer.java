@@ -12,19 +12,33 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   private static final String BLOCK_ENTRY = "Entering a new block: ";
   private static final String BLOCK_EXIT = "Leaving the block";
+  private static final int GLOBAL_SCOPE = 1;
 
   public SemanticAnalyzer() {
     table = new HashMap<String, ArrayList<NodeType>>();
+
+    //Insert predefined methods
+    // int input(void), and
+    // void output(int)
+    int dummyPos = -1;
+    Dec inputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.INT), "input", null, null);
+
+    VarDecList outputParams = new VarDecList(new SimpleDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.INT), "outputValue"), null);
+    Dec outputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.VOID), "output", outputParams, null);
+
+    insert (inputDec, GLOBAL_SCOPE);
+    insert(outputDec, GLOBAL_SCOPE);
   }
 
   private void printError (int row, int col, String msg) {
-    StringBuilder sb = new StringBuilder("Error at line " + row + ", col " + col + ": ");
+    StringBuilder sb = new StringBuilder("Error at line " + (row + 1) + ", col " + (col + 1) + ": ");
     sb.append(msg);
     System.err.println(sb.toString());
   }
 
   //Accessed by the utility methods for “insert”, ”lookup”, and “delete” operations
   private void insert(Dec newDec, int level) {
+
     String name = newDec.name;
     NodeType toInsert = new NodeType(name, newDec, level);
 
@@ -34,8 +48,6 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
       ArrayList<NodeType> nodes = table.get(name);
       NodeType n;
-
-      //TODO: If there are two variables with the same name and the same scope, that is not permissible
 
       //Sort the list from most specific scope to least specific (global)
       //Also sort from most recent declaration to least recent (due to >=)
@@ -63,30 +75,40 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
   }
 
-  //Returns the most type of the most recent declaration of a particular variable name
-  //Or the type of a function
-  private int lookup (String name, Boolean isFunc, int row, int col) {
-    
-    for (Iterator<NodeType> iter = table.get(name).iterator(); iter.hasNext();) {
-      NodeType n = iter.next();
+  /*
+  Given the provided name of a variable or function, retrieve its return type and return it.
+  If isFunc is false, return the type of the most recent declaration
+  If isFunc is true, return the type of a function declaration, even if it is not the most recent (as it is valid to have a var and func by the same name)
 
-      //If searching for a function, skip over any non-function matches
-      if (isFunc && !(n.def.getClass().getName().equals("FunctionDec"))) {
-        continue;
-      }
-      else {
-        //Otherwise return the first one, format depends on if its an array or not
-        if (n.def.getClass().getName().equals("ArrayDec") && n.def.type.type == NameTy.INT) {
-          return NameTy.INT_ARR;
+  Types are returned in the form of the NameTy constants (including NameTy.VOID, NameTy.INT, NameTy.INT_ARR, NameTy.NO_DEC)
+  Types are returned in the form of the declaration which created the variable (or null)
+  */
+  private Dec lookup (String name, Boolean isFunc, int row, int col) {
+    
+    if (table.get(name) != null) {
+      for (Iterator<NodeType> iter = table.get(name).iterator(); iter.hasNext();) {
+        NodeType n = iter.next();
+  
+        //If searching for a function, skip over any non-function matches
+        if (isFunc && !(n.def instanceof FunctionDec)) {
+          continue;
         }
         else {
-          return n.def.type.type;
-        }        
+          //Otherwise return the first one, format depends on if its an array or not
+          /*if (n.def.getClass().getName().equals("ArrayDec") && n.def.type.type == NameTy.INT) {
+            return NameTy.INT_ARR;
+          }
+          else {
+            return n.def.type.type;
+          } */
+          return n.def;       
+        }
       }
     }
 
     printError(row, col, "undefined reference to '" + name + "'");
-    return NameTy.NO_DEC;
+    //return NameTy.NO_DEC;
+    return new ErrorDec(row, col);
   }
 
   private void deleteScope(int levelToRemove) {
@@ -131,6 +153,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   public void visit (IndexVar var, int level ) {
     var.index.accept( this, level);
+
   }
 
   public void visit (SimpleVar var, int level ) {
@@ -173,7 +196,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
     indent( level );
     System.out.println("Entering the global scope:");
     
-    level++;
+    level = GLOBAL_SCOPE;
     while( decList != null ) {
       decList.head.accept( this, level );
       decList = decList.tail;
@@ -207,9 +230,25 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     if (exp.lhs != null) {
       exp.lhs.accept( this, level );
+      exp.rhs.accept( this, level );
+
+      //TODO Check that LHS and RHS sides match
+      Dec leftDec = lookup(exp.lhs.name, false, exp.lhs.row, exp.rhs.col);
+      NameTy leftType = leftDec.type;
+      NameTy rightType = exp.rhs.dType.type;
+      
+      if (leftType.type != rightType.type) {
+        printError(exp.row, exp.col, "Attempt to assign type '" + rightType + "' to " + exp.lhs.name +", which has type '" + leftType + "'");
+      }
+
+      //Assign the overall expression the same type / declaration   
+      exp.dType = leftDec;
     }
-    
-    exp.rhs.accept( this, level );
+    else {
+      exp.rhs.accept( this, level );
+      printError(exp.row, exp.col, "Cannot assign to null");
+      exp.dType = new ErrorDec(exp.row, exp.col);
+    }        
   }
 
   public void visit (CallExp exp, int level ) {
@@ -217,6 +256,9 @@ public class SemanticAnalyzer implements AbsynVisitor {
     if (exp.args != null && exp.args.head != null) {
       exp.args.accept(this, level);
     }    
+
+    Dec funcDec = lookup(exp.func, true, exp.row, exp.col);
+    exp.dType = funcDec;
   }
   
   public void visit (CompoundExp compoundList, int level ) {
@@ -229,8 +271,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }    
   }    
 
-  public void visit (ErrorExp compoundList, int level ) {
-
+  public void visit (ErrorExp exp, int level ) {
+    exp.dType = new ErrorDec(exp.row, exp.col);
   }    
 
   public void visit( IfExp exp, int level ) {
@@ -239,6 +281,11 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     indent(level);
     System.out.println(BLOCK_ENTRY + " (if)");
+
+    //TODO: Typecheck if condition -- must be an integer
+    if (exp.test.dType == null || exp.test.dType.type.type != NameTy.INT) {
+      printError(exp.test.row, exp.test.col, "'if' condition does not evaluate to INT");
+    }
 
     exp.thenpart.accept( this, level +1);
 
@@ -260,11 +307,13 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit( IntExp exp, int level ) {
-    
+    //Assign the IntExp dType a dummy variable with integer type
+    exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.INT), null);
   }
 
   public void visit (NilExp exp, int level ) {
-    
+    //Assign the IntExp dType a dummy variable with void type
+    exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.VOID), null);
   }
 
   public void visit( OpExp exp, int level ) {
@@ -306,16 +355,34 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     exp.left.accept( this, level );
     exp.right.accept( this, level );
+
+    //TODO assign dType based on children and perform error checking and recovery
+    if (exp.left.dType.type.type != NameTy.INT) {
+      printError(exp.left.row, exp.left.col, "Both operands must be integers");
+      exp.dType = new ErrorDec(exp.row, exp.col);
+    } 
+    else if (exp.left.dType.type.type != exp.right.dType.type.type) {
+      printError(exp.row, exp.col, "Type mismatch in operation. Left is '" + exp.left.dType.toString() + "'', right is '" + exp.right.dType.type + "'");
+      exp.dType = new ErrorDec(exp.row, exp.col);
+    }
+    else {
+      exp.dType = exp.left.dType;
+    }
   }
 
-  public void visit (ReturnExp exp, int level ) {
-     
+  public void visit (ReturnExp exp, int level ) {     
     exp.exp.accept(this, level);
+
+    //The declaration type of the return expression is the same as that of its child
+    exp.dType = exp.exp.dType;
   }  
 
   public void visit( VarExp exp, int level ) {
      
     exp.variable.accept(this, level);
+
+    //Assign dType based on the declaration of the given variable name
+    exp.dType = lookup(exp.variable.name, false, exp.variable.row, exp.variable.col);
   }
 
   public void visit (WhileExp exp, int level ) {
@@ -324,6 +391,11 @@ public class SemanticAnalyzer implements AbsynVisitor {
     
     exp.test.accept(this, level+1);
     exp.body.accept(this, level+1);
+
+    //TODO: Ensure that the 'test' is an int. If not, throw an error:
+    if (exp.test.dType == null || exp.test.dType.type.type != NameTy.INT) {
+      printError(exp.test.row, exp.test.col, "loop condition does not evaluate to INT");
+    }
 
     deleteScope(level + 1);
     indent(level);

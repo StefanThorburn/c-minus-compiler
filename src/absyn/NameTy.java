@@ -27,7 +27,7 @@ public class NameTy extends Exp {
       case NameTy.INT_ARR:
         return "int []";
       case NameTy.NO_DEC:
-        return "(NO DECLARED TYPE)";
+        return "(NO TYPE)";
       default:
         return "void";
     }
