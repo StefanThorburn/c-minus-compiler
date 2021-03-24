@@ -84,9 +84,10 @@ class CM {
           PrintStream symPS = new PrintStream(symFos);
           System.setOut(symPS);
         }
-        else {
-          //Toss stdout output into the void
+        if (!SHOW_SYM_TABLES && !SHOW_TREE) {
+          System.out.println("Showing errors only.");
           System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n"+ "Use [-s] flag to print the symbol table");
+          //Toss stdout output into the void
           System.setOut(new PrintStream(OutputStream.nullOutputStream()));
         }      
 
@@ -94,9 +95,14 @@ class CM {
         SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
         result.accept(analyzerVisitor, 0);
 
+        //Restore stdout
+        System.setOut(console);
       }
 
       // Perform semantic analysis 
+    } catch (FileNotFoundException e) {
+      System.out.println("Could not find file '" + INPUT_FILE + "'. Check your spelling, and ensure it exists. Exiting...");
+      System.exit(-1);      
     } catch (Exception e) {
       /* do cleanup here -- possibly rethrow e */
       e.printStackTrace();
