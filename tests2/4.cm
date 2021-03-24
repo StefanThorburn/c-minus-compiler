@@ -1,4 +1,6 @@
-//function calls and return exps
+/*
+function calls and return exps
+*/
 
 void funtwo(void) {
      int x;

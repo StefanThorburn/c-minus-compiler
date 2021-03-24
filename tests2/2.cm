@@ -1,4 +1,12 @@
-//match two sides of an assignment
+/*
+match two sides of an assignment
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
 
 void main(void) {
     int x; 

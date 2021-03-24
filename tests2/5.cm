@@ -1,4 +1,12 @@
-//test conditions for if- and while- stmts must be int
+/*
+test conditions for if- and while- stmts must be int
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
 
 void main(void) {
     int x;

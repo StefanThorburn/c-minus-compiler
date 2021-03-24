@@ -6,6 +6,10 @@ import java.util.Iterator;
 
 import absyn.*;
 
+//TODO: Match a function's declared return type with the type it actually returns
+//TODO: More error recovery -- attempt to avoid cascading errors (possibly replacing invalid types with permissible ones after reporting error)
+//TODO: More type checking -- get as creative as you can. Always test on both valid and invalid files
+
 public class SemanticAnalyzer implements AbsynVisitor {
 
   HashMap<String, ArrayList<NodeType>> table;
@@ -154,6 +158,10 @@ public class SemanticAnalyzer implements AbsynVisitor {
   public void visit (IndexVar var, int level ) {
     var.index.accept( this, level);
 
+    //Check that the index being accesssed is an integer
+    if (var.index.dType.type.type != NameTy.INT) {
+      printError(var.index.row, var.index.col, "array index must be of type INT");      
+    }    
   }
 
   public void visit (SimpleVar var, int level ) {
@@ -317,41 +325,6 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit( OpExp exp, int level ) {
-
-    // switch( exp.op ) {
-    //   case OpExp.PLUS:
-    //     System.out.println( " + " );
-    //     break;
-    //   case OpExp.MINUS:
-    //     System.out.println( " - " );
-    //     break;
-    //   case OpExp.MUL:
-    //     System.out.println( " * " );
-    //     break;
-    //   case OpExp.DIV:
-    //     System.out.println( " / " );
-    //     break;
-    //   case OpExp.LT:
-    //     System.out.println( " < " );
-    //     break;
-    //   case OpExp.LE:
-    //     System.out.println( " <= " );
-    //     break;
-    //   case OpExp.GT:
-    //     System.out.println( " > " );
-    //     break;
-    //   case OpExp.GE:
-    //     System.out.println( " >= " );
-    //     break;
-    //   case OpExp.EQ:
-    //     System.out.println( " == " );
-    //     break;
-    //   case OpExp.NE:
-    //     System.out.println( " != " );
-    //     break;
-    //   default:
-    //     System.out.println( "Unrecognized operator at line " + exp.row + " and column " + exp.col);
-    // }
 
     exp.left.accept( this, level );
     exp.right.accept( this, level );

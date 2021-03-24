@@ -57,6 +57,10 @@ class CM {
       Absyn result = (Absyn)(p.parse().value);  
       
       if (result != null) {
+        if (!SHOW_SYM_TABLES && !SHOW_TREE) {
+          System.out.println("Showing errors only.");
+          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n"+ "Use [-s] flag to print the symbol table");          
+        }      
         // If the '-a' flag is set, print the abstract syntax tree to a .abs file
         if (SHOW_TREE) {
           System.out.println("Abstract syntax tree written to '" + FILE_NAME + ".abs'");
@@ -83,13 +87,10 @@ class CM {
           FileOutputStream symFos = new FileOutputStream(symFile);
           PrintStream symPS = new PrintStream(symFos);
           System.setOut(symPS);
-        }
-        if (!SHOW_SYM_TABLES && !SHOW_TREE) {
-          System.out.println("Showing errors only.");
-          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n"+ "Use [-s] flag to print the symbol table");
-          //Toss stdout output into the void
-          System.setOut(new PrintStream(OutputStream.nullOutputStream()));
-        }      
+        }        
+
+        //Toss stdout output into the void
+        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
 
         // Perform semantic analysis
         SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
