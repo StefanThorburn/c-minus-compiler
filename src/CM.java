@@ -5,6 +5,7 @@
 import absyn.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.FileReader;
@@ -73,6 +74,20 @@ class CM {
           //Reset stdout
           System.setOut(console);
         }
+        if (SHOW_SYM_TABLES) {
+          //redirect stdout to a .sym file
+          System.out.println("Symbol table written to '" + FILE_NAME + ".sym'");
+
+          //Redirect stdout
+          File symFile = new File(FILE_NAME + ".sym");
+          FileOutputStream symFos = new FileOutputStream(symFile);
+          PrintStream symPS = new PrintStream(symFos);
+          System.setOut(symPS);
+        }
+        else {
+          //Toss stdout output into the void
+          System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        }      
 
         // Perform semantic analysis
         SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
