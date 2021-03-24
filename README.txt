@@ -4,6 +4,9 @@ Prabhleen Ratra & Stefan Thorburn
 ***** CHECKPOINT ONE *****
 Our parser uses the provided sample scanner and parser as a base
 
+***** CHECKPOINT TWO *****
+Symbol Table and Type Checking
+
 *** RUNNING ***
 In root directory, type 'make'
 
