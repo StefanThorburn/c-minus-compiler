@@ -9,6 +9,7 @@ public class CompoundExp extends Exp {
         this.col = col;
         this.decs = decs;
         this.exps = exps;
+        dType = null;
     }
 
     public void accept( AbsynVisitor visitor, int level ) {

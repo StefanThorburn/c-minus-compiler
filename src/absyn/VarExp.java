@@ -7,6 +7,7 @@ public class VarExp extends Exp {
     this.row = row;
     this.col = col;
     this.variable = variable;
+    dType = null;
   }
 
   public void accept( AbsynVisitor visitor, int level ) {

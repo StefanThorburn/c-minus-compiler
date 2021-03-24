@@ -11,6 +11,7 @@ public class IfExp extends Exp {
     this.test = test;
     this.thenpart = thenpart;
     this.elsepart = elsepart;
+    dType = null;
   }
 
   public void accept( AbsynVisitor visitor, int level ) {
