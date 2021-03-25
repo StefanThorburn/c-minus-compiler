@@ -6,7 +6,8 @@ public class ErrorDec extends VarDec {
       this.row = row;
       this.col = col;
       //By default, assign a 'no declaration' type
-      this.type = new NameTy(row, col, NameTy.NO_DEC);
+      //By default, assign an int type to avoid error cascading
+      this.type = new NameTy(row, col, NameTy.INT);
    }
 
    public ErrorDec(int row, int col, NameTy type, String name) {
