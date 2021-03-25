@@ -1,5 +1,6 @@
 /*
 test conditions for if- and while- stmts must be int
+Complex return statement checking
 */
 
 void foo (void) {
@@ -13,4 +14,52 @@ void main(void) {
     if( x )
     output(foo());
     if(foo()) output(x,foo());
+}
+
+int returnsProperly (void) {
+    int x;
+    int y;
+    x = 2;
+    y = 15;
+
+    if (x == 3) {
+        return 17 + 2;
+    }
+    else {
+        if (x > 4) {
+            if (y == 5) {
+                return 15;
+            }
+            else {
+                return 12;
+            }
+        }
+        else {
+            return 5;
+        }
+    }
+}
+
+int missingReturn (void) {
+    int x;
+    int y;
+    x = 2;
+    y = 15;
+
+    if (x == 3) {
+        return 17 + 2;
+    }
+    else {
+        if (x > 4) {
+            if (y == 5) {
+                return 15;
+            }
+            else {
+                return 12;
+            }
+        }
+        else {
+            x = x + 5;
+        }
+    }
 }

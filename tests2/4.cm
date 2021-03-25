@@ -1,9 +1,29 @@
 /*
-function calls and return exps
+Functions:
+- Return type must match declared type (in this case, returns int but should be void)
+- Can't have expressions after return (unreachable code)
+- Non-void functions must have a return type
 */
 
-void funtwo(void) {
+void funone(void) {
      int x;
      x = 2;
      return x;
+}
+
+int funtwo(int y) {
+     int x;
+     x = y + 2;     
+     return x;
+
+     if (x > 7) {
+          output(x);
+     }
+}
+
+int funthree(int x, int y, int z) {
+     int arr[3];
+     arr[0] = x;
+     arr[1] = y;
+     arr[2] = z;
 }
