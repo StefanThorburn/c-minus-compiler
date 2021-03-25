@@ -6,7 +6,6 @@ import java.util.Iterator;
 
 import absyn.*;
 
-//TODO: Match a function's declared return type with the type it actually returns
 //TODO: More error recovery -- attempt to avoid cascading errors (possibly replacing invalid types with permissible ones after reporting error)
 //TODO: More type checking -- get as creative as you can. Always test on both valid and invalid files
 
@@ -185,6 +184,25 @@ public class SemanticAnalyzer implements AbsynVisitor {
     level++;
     functionDec.params.accept(this, level);
     functionDec.body.accept(this, level);
+
+    //TODO: Match a function's declared return type with the type it actually returns
+   
+    // NameTy funcType = functionDec.type;
+    // NameTy returnType = null;
+    // ExpList expList;
+
+    // while(expList != null){
+    //   if (expList instanceof ReturnExp){
+    //     returnType = expList.type;
+    //   }
+    //   else{
+    //     System.out.println("Error");
+    //   }
+    // }
+
+    // if (funcType.type != returnType.type) {
+    //   printError(functionDec.row, functionDec.col, "Attempt to return type to function" + returnType + ", which is of type '" + funcType + "'");
+    // }
 
     deleteScope(level);
     indent(level - 1);
