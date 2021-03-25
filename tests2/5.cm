@@ -1,6 +1,8 @@
 /*
 test conditions for if- and while- stmts must be int
 Complex return statement checking
+Variable redeclaration
+Undefined reference
 */
 
 void foo (void) {
@@ -11,9 +13,13 @@ void foo (void) {
 
 void main(void) {
     int x;
+    int x;
+    x = 3;
     if( x )
     output(foo());
     if(foo()) output(x,foo());
+
+    y = 10;
 }
 
 int returnsProperly (void) {
