@@ -154,7 +154,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
     //Check that the declared function return type and actual return type match
     if (exp.dType.type.type != desiredType) {
       //If they don't, output an error
-      printError(exp.row, exp.col, "Return type must be type '" + desiredType + "' for function " + funcName);
+      printError(exp.row, exp.col, "Return type must be type '" + (new NameTy(-1, -1, desiredType)) + "' for function " + funcName);
     }
   }
 
@@ -285,43 +285,6 @@ public class SemanticAnalyzer implements AbsynVisitor {
     functionDec.body.accept(this, level);
 
     ExpList exps = functionDec.body.exps;
-    Exp head = null;
-    boolean returnFound = false;
-
-    // //Iterate over all the expressions in the function
-    // while (exps != null) {
-    //   head = exps.head;
-    //   //Search for a return expression
-    //   if (head instanceof ReturnExp) {
-    //     returnFound = true;
-    //     //Check that the declared function return type and actual return type match
-    //     if (head.dType.type.type != functionDec.type.type) {
-    //       //If they don't, output an error
-    //       printError(head.row, head.col, "Return type must be type '" + functionDec.type + "' for function " + functionDec.name);
-    //     }
-    //   }
-    //   //If there are any other expressions after a top-level return, print an error
-    //   else if (returnFound) {
-    //     printError(head.row, head.col, "Unreachable code detected after 'return'");
-    //     break;
-    //   }
-      
-    //   exps = exps.tail;
-    // }
-
-    // if (head != null) {
-    //   //If the function returns a non-void value but has no return statement, print error
-    //   if (!returnFound && functionDec.type.type != NameTy.VOID) {
-    //     //It's possible it may be an "if () return; else return;" situation, which must also be accounted for
-    //     if (head instanceof IfExp) {
-    //       ExpList ifExps = ((IfExp) head).;
-    //     }
-    //     else {
-    //       printError(head.row, head.col, "Expected return statement for function '" + functionDec.name + "'");
-    //     }        
-    //   }
-    // }    
-
     checkForReturn(exps, functionDec.name, functionDec.type.type);
 
     deleteScope(level);
@@ -387,8 +350,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
         printError(exp.row, exp.col, "Attempt to assign type '" + rightType + "' to " + exp.lhs.name +", which has type '" + leftType + "'");
       }
 
-      //Assign the overall expression the same type / declaration   
-      exp.dType = leftDec;
+      // Assign the overall expression a valid type to avoid error cascading
+      exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.INT), null);
     }
     else {
       exp.rhs.accept( this, level );
