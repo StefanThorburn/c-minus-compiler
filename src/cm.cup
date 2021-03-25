@@ -347,6 +347,8 @@ returnStmt     ::= RETURN:r exp:e SEMI
                | RETURN:r SEMI
                   {: RESULT = new ReturnExp(rleft, rright, null); :}
                ;
+            /* | RETURN:r error:e SEMI
+                {: RESULT = new ReturnExp(rleft, rright, new ErrorExp(eleft, eright), e); :} */
                 
 // <expression> -> <var> = <expression> | <simple-expression>
 // <simple-expression> -> <additive-expression> <relop> <additive-expression> | <additive-expression>
