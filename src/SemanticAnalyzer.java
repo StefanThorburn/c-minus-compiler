@@ -150,6 +150,94 @@ public class SemanticAnalyzer implements AbsynVisitor {
     for( int i = 0; i < level * SPACES; i++ ) System.out.print( " " );
   }
 
+  private void checkReturnExpType(ReturnExp exp, String funcName, int desiredType) {
+    //Check that the declared function return type and actual return type match
+    if (exp.dType.type.type != desiredType) {
+      //If they don't, output an error
+      printError(exp.row, exp.col, "Return type must be type '" + desiredType + "' for function " + funcName);
+    }
+  }
+
+  //Verifies that a return statement exists for a non-void function, verifies return type, and checks for unreachable code
+  //Checks nested scopes (for e.g. if/else blocks that always return)
+  private boolean checkForReturn(ExpList exps, String funcName, int returnType) {
+    
+    Exp head = null;
+    boolean returnFound = false;
+
+    //Iterate over all the expressions in the function
+    while (exps != null) {
+      head = exps.head;
+      //Search for a return expression
+      if (head instanceof ReturnExp) {
+        returnFound = true;
+        checkReturnExpType((ReturnExp) head, funcName, returnType);
+      }
+      //If there are any other expressions after a top-level return, print an error
+      else if (returnFound) {
+        printError(head.row, head.col, "Unreachable code detected after 'return'");
+        break;
+      }
+      
+      exps = exps.tail;
+    }
+
+    if (head != null && !returnFound) {
+      //If the function returns a non-void value but has no return statement, print error
+      if (returnType != NameTy.VOID) {
+        //It's possible it may be an "if () return; else return;" situation or a loop, which must also be accounted for
+        if (head instanceof IfExp) {
+          IfExp ifHead = (IfExp) head;
+          boolean ifPart = false;
+          //Call function recursively on the 'if' part to determine if a return statement exists
+
+          //Check if the expression is a returnExp, if it is check the type
+          if (ifHead.thenpart instanceof ReturnExp) {
+            returnFound = true;
+            checkReturnExpType((ReturnExp) ifHead.thenpart, funcName, returnType);
+            return returnFound;
+          }
+          //Otherwise, check if it's a CompoundExp and check type recursively
+          else if (ifHead.thenpart instanceof CompoundExp)           {
+            ExpList ifExps = ((CompoundExp)(ifHead.thenpart)).exps;
+            ifPart = checkForReturn(ifExps, funcName, returnType);
+          }
+          if (ifHead.thenpart != null && (ifHead.thenpart instanceof ReturnExp || ifHead.thenpart instanceof CompoundExp)) {
+            //Also call on the 'else' part if relevant -- checking for returnExp or compoundExp
+            boolean elsePart = false;
+
+            if (ifHead.elsepart instanceof ReturnExp) {
+              returnFound = true;
+              checkReturnExpType((ReturnExp) ifHead.elsepart, funcName, returnType);
+              return returnFound;
+            }
+            else if (ifHead.elsepart instanceof CompoundExp) {
+              ExpList elseExps = ((CompoundExp)(ifHead.elsepart)).exps;
+              elsePart = checkForReturn(elseExps, funcName, returnType);
+              return (ifPart && elsePart);
+            }            
+          }  
+          else {
+            printError(head.row, head.col, "Expected return statement for function '" + funcName + "'");
+          }        
+
+        }
+        // else if (head instanceof WhileExp) {
+        //   ExpList whileExps = ((CompoundExp) ((WhileExp) head).body).exps;
+
+
+        //   returnFound = checkForReturn(whileExps, funcName, returnType);
+        // }
+        else {
+          printError(head.row, head.col, "Expected return statement for function '" + funcName + "'");
+        }        
+      }
+    }
+
+    return returnFound;
+  }
+
+
   public void visit (NameTy nameTy, int level ) {
 
   }
@@ -185,24 +273,45 @@ public class SemanticAnalyzer implements AbsynVisitor {
     functionDec.params.accept(this, level);
     functionDec.body.accept(this, level);
 
-    //TODO: Match a function's declared return type with the type it actually returns
-   
-    // NameTy funcType = functionDec.type;
-    // NameTy returnType = null;
-    // ExpList expList;
+    ExpList exps = functionDec.body.exps;
+    Exp head = null;
+    boolean returnFound = false;
 
-    // while(expList != null){
-    //   if (expList instanceof ReturnExp){
-    //     returnType = expList.type;
+    // //Iterate over all the expressions in the function
+    // while (exps != null) {
+    //   head = exps.head;
+    //   //Search for a return expression
+    //   if (head instanceof ReturnExp) {
+    //     returnFound = true;
+    //     //Check that the declared function return type and actual return type match
+    //     if (head.dType.type.type != functionDec.type.type) {
+    //       //If they don't, output an error
+    //       printError(head.row, head.col, "Return type must be type '" + functionDec.type + "' for function " + functionDec.name);
+    //     }
     //   }
-    //   else{
-    //     System.out.println("Error");
+    //   //If there are any other expressions after a top-level return, print an error
+    //   else if (returnFound) {
+    //     printError(head.row, head.col, "Unreachable code detected after 'return'");
+    //     break;
     //   }
+      
+    //   exps = exps.tail;
     // }
 
-    // if (funcType.type != returnType.type) {
-    //   printError(functionDec.row, functionDec.col, "Attempt to return type to function" + returnType + ", which is of type '" + funcType + "'");
-    // }
+    // if (head != null) {
+    //   //If the function returns a non-void value but has no return statement, print error
+    //   if (!returnFound && functionDec.type.type != NameTy.VOID) {
+    //     //It's possible it may be an "if () return; else return;" situation, which must also be accounted for
+    //     if (head instanceof IfExp) {
+    //       ExpList ifExps = ((IfExp) head).;
+    //     }
+    //     else {
+    //       printError(head.row, head.col, "Expected return statement for function '" + functionDec.name + "'");
+    //     }        
+    //   }
+    // }    
+
+    checkForReturn(exps, functionDec.name, functionDec.type.type);
 
     deleteScope(level);
     indent(level - 1);

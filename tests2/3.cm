@@ -13,4 +13,6 @@ int fun(int fff ) {
      int y;
      x = x * 2 + 1;
      y = x + foo();
+     
+     return y;
 }
