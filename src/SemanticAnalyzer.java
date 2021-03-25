@@ -248,7 +248,18 @@ public class SemanticAnalyzer implements AbsynVisitor {
     //Check that the index being accesssed is an integer
     if (var.index.dType.type.type != NameTy.INT) {
       printError(var.index.row, var.index.col, "array index must be of type INT");      
-    }    
+    }  
+
+    IntExp intExp;
+    ArrayDec arrayDec;
+
+    if (var.index instanceof IntExp) {
+      intExp = (IntExp) var.index;
+      arrayDec = (ArrayDec) lookup(var.name, false, var.row, var.col);
+      if(!(intExp.value < arrayDec.size.value) && (intExp.value > 0)){
+        printError(var.index.row, var.index.col, "array index is out of bounds");
+      }
+    }
   }
 
   public void visit (SimpleVar var, int level ) {
