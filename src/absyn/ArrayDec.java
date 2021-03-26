@@ -16,6 +16,6 @@ public class ArrayDec extends VarDec {
    }
 
    public String toString () {
-      return name + ": " + type + " []";
+      return name + ": " + type + " [" + size.value + "]";
    }
 }
