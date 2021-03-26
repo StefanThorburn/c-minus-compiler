@@ -43,6 +43,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
   private void insert(Dec newDec, int level) {
 
     String name = newDec.name;
+
     NodeType toInsert = new NodeType(name, newDec, level);
 
     //Check if there's already a declaration with this name
@@ -366,8 +367,45 @@ public class SemanticAnalyzer implements AbsynVisitor {
       exp.args.accept(this, level);
     }    
 
-    Dec funcDec = lookup(exp.func, true, exp.row, exp.col);
-    exp.dType = funcDec;
+    Dec lookupDec = lookup(exp.func, true, exp.row, exp.col);
+    if (lookupDec instanceof FunctionDec) {
+      FunctionDec funcDec = (FunctionDec) lookupDec;
+      ExpList callArgs = exp.args;
+      VarDecList expectedArgs = funcDec.params;
+      int numCall = 0;
+
+      while( callArgs != null && callArgs.head != null) {
+        numCall++;
+
+        //Check if there are any more function parameters
+        //If there is a single parameter of type void, the function is of the form ... funcName (void), which counts as 0 parameters
+        if (expectedArgs == null || expectedArgs.head == null || funcDec.numArguments == 0) {
+          //If there aren't, print an error for non matching number of arguments (too few)
+          printError(exp.row, exp.col, "Incorrect number of arguments for function '" + funcDec.name + "'. Expected " + funcDec.numArguments + ", got " + numCall);
+          break;
+        }
+        else {
+          //Compare the type of the current function call argument and expected function parameter
+          if (callArgs.head == null || callArgs.head.dType == null || callArgs.head.dType.type.type != expectedArgs.head.type.type) {
+            System.out.println("yeet");
+            //If they don't match, print error
+            printError(callArgs.head.row, callArgs.head.col, "Type mismatch for argument '" + callArgs.head.dType.name + "''. Expected " + expectedArgs.head.type + ", got " + callArgs.head.dType.type); 
+          }
+        
+          //Move onto next pair
+          callArgs = callArgs.tail;
+          expectedArgs = expectedArgs.tail;
+        }      
+      }
+
+      //In the case where there are not enough arguments to the function, print an error as well
+      if (expectedArgs != null && expectedArgs.head != null && funcDec.numArguments != 0) {
+        printError(exp.row, exp.col, "Incorrect number of arguments for function '" + funcDec.name + "'. Expected " + funcDec.numArguments + ", got " + numCall);
+      }
+
+    }    
+
+    exp.dType = lookupDec;
   }
   
   public void visit (CompoundExp compoundList, int level ) {

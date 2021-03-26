@@ -4,6 +4,7 @@ public class FunctionDec extends Dec {
 
    public VarDecList params;
    public CompoundExp body;
+   public int numArguments;
 
    public FunctionDec (int row, int col, NameTy type, String name, VarDecList params, CompoundExp body) {
       this.row = row;
@@ -12,6 +13,19 @@ public class FunctionDec extends Dec {
       this.name = name;
       this.params = params;
       this.body = body;
+      this.numArguments = 0;
+
+      //Compute the necessary number of arguments to the function
+      while (params != null) {
+         //If the function has the form funcName (void), don't count that as an argument
+         if (params.head != null && numArguments == 0 && params.head.type.type == NameTy.VOID) {
+            break;
+         }
+
+         numArguments++;
+         params = params.tail;
+      }
+
    }
 
    public void accept( AbsynVisitor visitor, int level ) {
