@@ -239,12 +239,12 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
 
-  public void visit (NameTy nameTy, int level ) {
+  public void visit (NameTy nameTy, int level, boolean isAddr ) {
 
   }
 
-  public void visit (IndexVar var, int level ) {
-    var.index.accept( this, level);
+  public void visit (IndexVar var, int level, boolean isAddr ) {
+    var.index.accept( this, level, false);
 
     //Check that the index being accesssed is an integer
     if (var.index.dType.type.type != NameTy.INT) {
@@ -263,27 +263,27 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
   }
 
-  public void visit (SimpleVar var, int level ) {
+  public void visit (SimpleVar var, int level, boolean isAddr ) {
 
   }
 
-  public void visit (ArrayDec array, int level ) {
+  public void visit (ArrayDec array, int level, boolean isAddr ) {
     insert(array, level);
 
   }
 
-  public void visit (ErrorDec badDec, int level ) {
+  public void visit (ErrorDec badDec, int level, boolean isAddr ) {
     insert(badDec, level);
   }    
 
-  public void visit (FunctionDec functionDec, int level ) {
+  public void visit (FunctionDec functionDec, int level, boolean isAddr ) {
     indent(level);
     System.out.println("Entering scope for function: " + functionDec.name);
     insert(functionDec, level);
 
     level++;
-    functionDec.params.accept(this, level);
-    functionDec.body.accept(this, level);
+    functionDec.params.accept(this, level, false);
+    functionDec.body.accept(this, level, false);
 
     ExpList exps = functionDec.body.exps;
     checkForReturn(exps, functionDec.name, functionDec.type.type);
@@ -293,7 +293,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
     System.out.println("Leaving the function scope");
   }
 
-  public void visit (SimpleDec dec, int level ) {
+  public void visit (SimpleDec dec, int level, boolean isAddr ) {
 
     //Don't insert a declaration into the symbol table in the case of func (void)
     if (dec.name != null && dec.type.type != NameTy.VOID) {
@@ -302,13 +302,13 @@ public class SemanticAnalyzer implements AbsynVisitor {
     
   }  
 
-  public void visit (DecList decList, int level ) {
+  public void visit (DecList decList, int level, boolean isAddr ) {
     indent( level );
     System.out.println("Entering the global scope:");
     
     level = GLOBAL_SCOPE;
     while( decList != null ) {
-      decList.head.accept( this, level );
+      decList.head.accept( this, level, false );
       decList = decList.tail;
     } 
 
@@ -317,30 +317,30 @@ public class SemanticAnalyzer implements AbsynVisitor {
     System.out.println("Leaving the global scope");
   }
 
-  public void visit (VarDecList decList, int level ) {
+  public void visit (VarDecList decList, int level, boolean isAddr ) {
 
     while( decList != null ) {
-      decList.head.accept( this, level );
+      decList.head.accept( this, level, false );
       decList = decList.tail;
     } 
   }
 
-  public void visit( ExpList expList, int level ) {
+  public void visit( ExpList expList, int level, boolean isAddr ) {
 
     if (expList.head != null) {
 
       while( expList != null ) {
-        expList.head.accept( this, level );
+        expList.head.accept( this, level, false );
         expList = expList.tail;
       } 
     }    
   }  
 
-  public void visit( AssignExp exp, int level ) {
+  public void visit( AssignExp exp, int level, boolean isAddr ) {
 
     if (exp.lhs != null) {
-      exp.lhs.accept( this, level );
-      exp.rhs.accept( this, level );
+      exp.lhs.accept( this, level, false );
+      exp.rhs.accept( this, level, false );
 
       //TODO Check that LHS and RHS sides match
       Dec leftDec = lookup(exp.lhs.name, false, exp.lhs.row, exp.rhs.col);
@@ -355,16 +355,16 @@ public class SemanticAnalyzer implements AbsynVisitor {
       exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.INT), null);
     }
     else {
-      exp.rhs.accept( this, level );
+      exp.rhs.accept( this, level, false );
       printError(exp.row, exp.col, "Cannot assign to null");
       exp.dType = new ErrorDec(exp.row, exp.col);
     }        
   }
 
-  public void visit (CallExp exp, int level ) {
+  public void visit (CallExp exp, int level, boolean isAddr ) {
 
     if (exp.args != null && exp.args.head != null) {
-      exp.args.accept(this, level);
+      exp.args.accept(this, level, false);
     }    
 
     Dec lookupDec = lookup(exp.func, true, exp.row, exp.col);
@@ -408,23 +408,23 @@ public class SemanticAnalyzer implements AbsynVisitor {
     exp.dType = lookupDec;
   }
   
-  public void visit (CompoundExp compoundList, int level ) {
+  public void visit (CompoundExp compoundList, int level, boolean isAddr ) {
    
     if (compoundList.decs != null) {
-      compoundList.decs.accept( this, level );
+      compoundList.decs.accept( this, level, false );
     }
     if (compoundList.exps != null) {
-      compoundList.exps.accept( this, level );
+      compoundList.exps.accept( this, level, false );
     }    
   }    
 
-  public void visit (ErrorExp exp, int level ) {
+  public void visit (ErrorExp exp, int level, boolean isAddr ) {
     exp.dType = new ErrorDec(exp.row, exp.col);
   }    
 
-  public void visit( IfExp exp, int level ) {
+  public void visit( IfExp exp, int level, boolean isAddr ) {
 
-    exp.test.accept( this, level );
+    exp.test.accept( this, level, false );
 
     indent(level);
     System.out.println(BLOCK_ENTRY + " (if)");
@@ -434,7 +434,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
       printError(exp.test.row, exp.test.col, "'if' condition does not evaluate to INT");
     }
 
-    exp.thenpart.accept( this, level +1);
+    exp.thenpart.accept( this, level +1, false);
 
     deleteScope(level + 1);
     indent(level);
@@ -444,7 +444,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
       indent( level );
       System.out.println(BLOCK_ENTRY + " (else)");
 
-      exp.elsepart.accept( this, level +1);
+      exp.elsepart.accept( this, level +1, false);
 
       deleteScope(level + 1);
       indent(level);
@@ -453,20 +453,20 @@ public class SemanticAnalyzer implements AbsynVisitor {
     
   }
 
-  public void visit( IntExp exp, int level ) {
+  public void visit( IntExp exp, int level, boolean isAddr ) {
     //Assign the IntExp dType a dummy variable with integer type
     exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.INT), null);
   }
 
-  public void visit (NilExp exp, int level ) {
+  public void visit (NilExp exp, int level, boolean isAddr ) {
     //Assign the IntExp dType a dummy variable with void type
     exp.dType = new SimpleDec(exp.row, exp.col, new NameTy(exp.row, exp.col, NameTy.VOID), null);
   }
 
-  public void visit( OpExp exp, int level ) {
+  public void visit( OpExp exp, int level, boolean isAddr ) {
 
-    exp.left.accept( this, level );
-    exp.right.accept( this, level );
+    exp.left.accept( this, level, false );
+    exp.right.accept( this, level, false );
 
     //TODO assign dType based on children and perform error checking and recovery
     if (exp.left.dType.type.type != NameTy.INT) {
@@ -482,27 +482,27 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
   }
 
-  public void visit (ReturnExp exp, int level ) {     
-    exp.exp.accept(this, level);
+  public void visit (ReturnExp exp, int level, boolean isAddr ) {     
+    exp.exp.accept(this, level, false);
 
     //The declaration type of the return expression is the same as that of its child
     exp.dType = exp.exp.dType;
   }  
 
-  public void visit( VarExp exp, int level ) {
+  public void visit( VarExp exp, int level, boolean isAddr ) {
      
-    exp.variable.accept(this, level);
+    exp.variable.accept(this, level, false);
 
     //Assign dType based on the declaration of the given variable name
     exp.dType = lookup(exp.variable.name, false, exp.variable.row, exp.variable.col);
   }
 
-  public void visit (WhileExp exp, int level ) {
+  public void visit (WhileExp exp, int level, boolean isAddr ) {
     indent(level);
     System.out.println(BLOCK_ENTRY + " (loop)");
     
-    exp.test.accept(this, level+1);
-    exp.body.accept(this, level+1);
+    exp.test.accept(this, level+1, false);
+    exp.body.accept(this, level+1, false);
 
     //TODO: Ensure that the 'test' is an int. If not, throw an error:
     if (exp.test.dType == null || exp.test.dType.type.type != NameTy.INT) {

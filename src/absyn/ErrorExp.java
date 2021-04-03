@@ -8,8 +8,8 @@ public class ErrorExp extends Exp {
     dType = null;
   }
 
-  public void accept( AbsynVisitor visitor, int level ) {
-    visitor.visit( this, level );
+  public void accept( AbsynVisitor visitor, int level, boolean isAddr ) {
+    visitor.visit( this, level, false );
   }
 }
 
