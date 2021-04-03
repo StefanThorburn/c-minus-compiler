@@ -8,7 +8,7 @@ CUP=cup
 
 all: CM.class
 
-CM.class: absyn/*.java parser.java sym.java Lexer.java SemanticAnalyzer.java NodeType.java ShowTreeVisitor.java Scanner.java CM.java
+CM.class: absyn/*.java parser.java sym.java Lexer.java CodeGenerator.java SemanticAnalyzer.java NodeType.java ShowTreeVisitor.java Scanner.java CM.java
 
 %.class: %.java
 	$(JAVAC) -d $(BINDIR) $(CLASSPATH) $^
