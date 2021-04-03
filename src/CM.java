@@ -73,7 +73,7 @@ class CM {
 
           // Print abstract syntax tree to FILE_NAME.abs in current directory
           ShowTreeVisitor visitor = new ShowTreeVisitor();
-          result.accept(visitor, 0); 
+          result.accept(visitor, 0, false); 
 
           //Reset stdout
           System.setOut(console);
@@ -95,7 +95,7 @@ class CM {
 
         // Perform semantic analysis
         SemanticAnalyzer analyzerVisitor = new SemanticAnalyzer();
-        result.accept(analyzerVisitor, 0);
+        result.accept(analyzerVisitor, 0, false);
 
         //Restore stdout
         System.setOut(console);
