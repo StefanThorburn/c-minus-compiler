@@ -11,7 +11,8 @@ import absyn.*;
 
 public class SemanticAnalyzer implements AbsynVisitor {
 
-  HashMap<String, ArrayList<NodeType>> table;
+  private HashMap<String, ArrayList<NodeType>> table;
+  public boolean errorFound;
 
   private static final String BLOCK_ENTRY = "Entering a new block: ";
   private static final String BLOCK_EXIT = "Leaving the block";
@@ -19,6 +20,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   public SemanticAnalyzer() {
     table = new HashMap<String, ArrayList<NodeType>>();
+    //By default, assume no semantic errors
+    errorFound = false;
 
     //Insert predefined methods
     // int input(void), and
@@ -34,6 +37,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   private void printError (int row, int col, String msg) {
+    errorFound = true;
+
     StringBuilder sb = new StringBuilder("Error at line " + (row + 1) + ", col " + (col + 1) + ": ");
     sb.append(msg);
     System.err.println(sb.toString());

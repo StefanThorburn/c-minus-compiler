@@ -15,6 +15,7 @@ class CM {
   public static boolean SHOW_TREE = false;
   public static boolean SHOW_SYM_TABLES = false;
   public static boolean GENERATE_CODE = false;
+  public static boolean HAS_ERRORS = false;
   public static String INPUT_FILE = null;
   public static String FILE_NAME = null;
 
@@ -84,10 +85,7 @@ class CM {
           System.setOut(console);
         }
         if (SHOW_SYM_TABLES) {
-          //redirect stdout to a .sym file
-          System.out.println("Symbol table written to '" + FILE_NAME + ".sym'");
-
-          //Redirect stdout
+          //Redirect stdout to a .sym file          
           File symFile = new File(FILE_NAME + ".sym");
           FileOutputStream symFos = new FileOutputStream(symFile);
           PrintStream symPS = new PrintStream(symFos);
@@ -105,19 +103,34 @@ class CM {
         //Restore stdout
         System.setOut(console);
 
+        if (SHOW_SYM_TABLES) {
+          //Print after having reported any errors
+          System.out.println("Symbol table written to '" + FILE_NAME + ".sym'");
+        }
+
         //Only generate code if the flag is set
         if (GENERATE_CODE) {
 
-          System.out.println("Assembly code written to '" + FILE_NAME + ".tm'");
+          //First, confirm that there are no syntax or semantic errors
+          //HAS_ERRORS is true if there are any syntax errors or semantic errors, and false if both are error free
+          HAS_ERRORS = (p.errorFound || analyzerVisitor.errorFound);
 
-          //Redirect stdout to .tm file
-          File tmFile = new File(FILE_NAME + ".tm");
-          FileOutputStream tmFos = new FileOutputStream(tmFile);
-          PrintStream tmPS = new PrintStream(tmFos);
-          System.setOut(tmPS);
+          if (HAS_ERRORS) {
+            System.out.println("Cannot generate code while there are errors. Exiting...");
+          }
+          else {
+            //No syntax or semantic errors, proceed with code generation
+            System.out.println("Assembly code written to '" + FILE_NAME + ".tm'");
 
-          //Perform code generation
-          System.out.println("Flag was set");
+            //Redirect stdout to .tm file
+            File tmFile = new File(FILE_NAME + ".tm");
+            FileOutputStream tmFos = new FileOutputStream(tmFile);
+            PrintStream tmPS = new PrintStream(tmFos);
+            System.setOut(tmPS);
+
+            //Perform code generation
+            System.out.println("Flag was set");
+          }      
         }
       }
 
