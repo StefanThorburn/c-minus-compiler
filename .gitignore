@@ -9,6 +9,8 @@ sym.java
 *.abs
 *.sym
 *.tm
+TMSimulator/tm
+!TMSimulator/*.tm
 
 # ignore ad-hoc tests, except for ones meant for demo / provided tests #
 tests/*
