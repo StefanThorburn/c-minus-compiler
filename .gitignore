@@ -22,3 +22,7 @@ tests/*
 !tests/3.cm
 !tests/4.cm
 !tests/5.cm
+
+# ignore random other stuff
+*.sh
+!cm.sh
