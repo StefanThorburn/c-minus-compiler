@@ -14,9 +14,10 @@ class CM {
   // By default, don't show abstract syntax tree, do type checking, or output symbol tables
   public static boolean SHOW_TREE = false;
   public static boolean SHOW_SYM_TABLES = false;
+  public static boolean GENERATE_CODE = false;
+  public static boolean HAS_ERRORS = false;
   public static String INPUT_FILE = null;
   public static String FILE_NAME = null;
-  //TODO: Implement -c flag (see project overview)
 
   static public void main(String argv[]) {    
     
@@ -29,6 +30,9 @@ class CM {
       else if (s.equals("-s")) {
         SHOW_SYM_TABLES = true;
       }
+      else if (s.equals("-c")) {
+        GENERATE_CODE = true;
+      }
       //Check if the string ends with '.cm'
       else if (s.length() > 3 && s.substring(s.length()-3).equals(".cm")) {        
         // If it does, make that the input file
@@ -37,7 +41,7 @@ class CM {
     }
 
     if (INPUT_FILE == null) {
-      System.out.println("No input file provided, it must have a .cm extension. Exiting...");
+      System.out.println("No input file provided or incorrect file extension (must be .cm). Exiting...");
       System.exit(-1);
     }
 
@@ -57,9 +61,11 @@ class CM {
       Absyn result = (Absyn)(p.parse().value);  
       
       if (result != null) {
-        if (!SHOW_SYM_TABLES && !SHOW_TREE) {
+        if (!SHOW_SYM_TABLES && !SHOW_TREE && !GENERATE_CODE) {
           System.out.println("Showing errors only.");
-          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n"+ "Use [-s] flag to print the symbol table");          
+          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n" 
+                            + "Use [-s] flag to print the symbol table" + "\n"
+                            + "Use [-c] to generate assembly code (.tm)");          
         }      
         // If the '-a' flag is set, print the abstract syntax tree to a .abs file
         if (SHOW_TREE) {
@@ -79,17 +85,14 @@ class CM {
           System.setOut(console);
         }
         if (SHOW_SYM_TABLES) {
-          //redirect stdout to a .sym file
-          System.out.println("Symbol table written to '" + FILE_NAME + ".sym'");
-
-          //Redirect stdout
+          //Redirect stdout to a .sym file          
           File symFile = new File(FILE_NAME + ".sym");
           FileOutputStream symFos = new FileOutputStream(symFile);
           PrintStream symPS = new PrintStream(symFos);
           System.setOut(symPS);
         }        
         else {
-          //Toss stdout output into the void
+          //Toss stdout output into the void while doing semantic analysis
           System.setOut(new PrintStream(OutputStream.nullOutputStream()));
         }        
 
@@ -99,9 +102,38 @@ class CM {
 
         //Restore stdout
         System.setOut(console);
+
+        if (SHOW_SYM_TABLES) {
+          //Print after having reported any errors
+          System.out.println("Symbol table written to '" + FILE_NAME + ".sym'");
+        }
+
+        //Only generate code if the flag is set
+        if (GENERATE_CODE) {
+
+          //First, confirm that there are no syntax or semantic errors
+          //HAS_ERRORS is true if there are any syntax errors or semantic errors, and false if both are error free
+          HAS_ERRORS = (p.errorFound || analyzerVisitor.errorFound);
+
+          if (HAS_ERRORS) {
+            System.out.println("Cannot generate code while there are errors. Exiting...");
+          }
+          else {
+            //No syntax or semantic errors, proceed with code generation
+            System.out.println("Assembly code written to '" + FILE_NAME + ".tm'");
+
+            //Redirect stdout to .tm file
+            File tmFile = new File(FILE_NAME + ".tm");
+            FileOutputStream tmFos = new FileOutputStream(tmFile);
+            PrintStream tmPS = new PrintStream(tmFos);
+            System.setOut(tmPS);
+
+            //Perform code generation
+            System.out.println("Flag was set");
+          }      
+        }
       }
 
-      // Perform semantic analysis 
     } catch (FileNotFoundException e) {
       System.out.println("Could not find file '" + INPUT_FILE + "'. Check your spelling, and ensure it exists. Exiting...");
       System.exit(-1);      
