@@ -87,28 +87,6 @@ parser code {:
 
       System.err.println(m);
     }
-
-    //Overload report_error method so that custom errors also receive line and column numbers
-    // Where line is the line number of the error, col is the column number
-    // and message is the particular error message
-    public void report_error(String message, int line, int col) {
-       /* Create a StringBuffer called 'm' with the string 'Error' in it. */
-        StringBuffer m = new StringBuffer("Error");
-
-       if (line >= 0) {                
-         m.append(" in line "+(line+1));            
-                
-         if (col >= 0) {                    
-            m.append(", column "+(col+1));
-         }
-       }
-
-       /* Add to the end of the StringBuffer error message created in
-          this method the message that was passed into this method. */
-       m.append(" : "+message);
-   
-       System.err.println(m);
-    }
    
     /* Change the method report_fatal_error so when it reports a fatal
        error it will display the line and column number of where the

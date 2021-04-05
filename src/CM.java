@@ -129,7 +129,9 @@ class CM {
             System.setOut(tmPS);
 
             //Perform code generation
-            System.out.println("Flag was set");
+            CodeGenerator generatorVisitor = new CodeGenerator();
+            result.accept(generatorVisitor, 0, false);
+            
           }      
         }
       }
