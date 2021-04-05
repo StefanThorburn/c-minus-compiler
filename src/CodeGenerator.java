@@ -16,7 +16,6 @@ public class CodeGenerator implements AbsynVisitor {
 	public static int ac = 0;
 	public static int ac1 = 1;
 
-    /* functions to maintain code space: some methods like emitRO, emitRM, prelude, and finale need to be added */
     public static int emitLoc= 0;
     public static int highEmitLoc= 0;
 
@@ -57,6 +56,64 @@ public class CodeGenerator implements AbsynVisitor {
 		System.out.println("* " + c);
 	}
 
+    public static void emitRM(String op, int r1, int offset, int r2, String c) {
+		System.out.println(emitLoc + ": " + op + " " + r1 + ", " + offset + "(" + r2 + ") \t" + c);
+        ++emitLoc;
+
+		if (highEmitLoc < emitLoc)
+			highEmitLoc = emitLoc;
+	}
+
+	public static void emitRO(String op, int r1, int r2, int r3, String c){
+		System.out.println(emitLoc + ": " + op + " " + r1 + ", " + r2 + ", " + r3 + " \t" + c);
+        ++emitLoc;
+
+		if (highEmitLoc < emitLoc)
+			highEmitLoc = emitLoc;
+	}
+
+    public static void prelude(String fileName)
+    {
+          //Printing prelude
+          emitComment("C-Minus Compilation to TM Code");
+          emitComment("File: " + fileName);
+          emitComment("Standard prelude:");
+          emitRM("LD", 6, 0, 0, "load gp with maxaddr");
+          emitRM("LDA", 5, 0, 6, "Copy gp to fp");
+          emitRM("ST", 0, 0, 0, "Clear content at loc");
+          int savedLoc = emitSkip(1);
+          emitComment("Jump around i/o routines here");
+          emitComment("code for input routine");
+          emitRM("ST", 0, -1, 5, "store return");
+          emitRO("IN", 0, 0, 0, "input");
+          emitRM("LD", 7, -1, 5, "return to caller");
+          emitComment("code for output routine");
+          emitRM("ST", 0, -1, 5, "store return");
+          emitRM("ST", 0,-1,5, "load output value");
+          emitRO("OUT", 0, 0, 0, "output");
+          emitRM("LD", 7, -1, 5, "return to caller");
+          emitBackup(savedLoc);
+          emitRM("LDA", 7, 7, 7, "jump around i/o code");
+          emitRestore();
+          emitComment("End of standard prelude");
+    }
+
+    public static void finale(PrintStream console)
+    {
+          //Printing finale
+          emitRM("ST", fp, globalOffset+ofpFO, fp, "push ofp");
+          emitRM("LDA", fp, globalOffset, fp, "push frame");
+          emitRM_Abs("LDA", pc, entry, "jump to main loc");
+          emitRM("LD", fp, ofpFO, fp, "pop frame");
+          emitComment("end of execution.");
+          emitRO("HALT", 0, 0, 0, "");
+          //reset to stdout
+          System.setOut(console); //Reset output to terminal
+    }
+
+
+
+
     /*
     public void visit(Absyntrees) {   // wrapper for post-order traversal
         // generate the prelude
@@ -83,6 +140,7 @@ public class CodeGenerator implements AbsynVisitor {
 
     }
 
+    //add editComment
     public void visit (IndexVar var, int offset, boolean isAddr ) {
 
         var.index.accept( this, offset + 1, false);
@@ -92,6 +150,7 @@ public class CodeGenerator implements AbsynVisitor {
 
     }
 
+    //edit
     public void visit (ArrayDec array, int offset, boolean isAddr ) {
 
     }
@@ -99,13 +158,15 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit (ErrorDec compoundList, int offset, boolean isAddr ) {
 
     }    
-
+    
+    //edit
     public void visit (FunctionDec functionDec, int offset, boolean isAddr ) {
 
         functionDec.params.accept(this, offset, false);
         functionDec.body.accept(this, offset, false);
     }
 
+    //edit
     public void visit (SimpleDec dec, int offset, boolean isAddr ) {
 
     }  
@@ -136,6 +197,7 @@ public class CodeGenerator implements AbsynVisitor {
         }    
     }  
 
+    //edit
     public void visit( AssignExp exp, int offset, boolean isAddr ) {
 
         if (exp.lhs != null) {
@@ -145,6 +207,7 @@ public class CodeGenerator implements AbsynVisitor {
         exp.rhs.accept( this, offset, false );
     }
 
+    //edit
     public void visit (CallExp exp, int offset, boolean isAddr ) {
 
         if (exp.args != null && exp.args.head != null) {
@@ -152,6 +215,7 @@ public class CodeGenerator implements AbsynVisitor {
         }    
     }
     
+    //edit
     public void visit (CompoundExp compoundList, int offset, boolean isAddr ) {
    
         if (compoundList.decs != null) {
@@ -166,6 +230,7 @@ public class CodeGenerator implements AbsynVisitor {
 
     }    
 
+    //edit
     public void visit( IfExp exp, int offset, boolean isAddr ) {
  
         exp.test.accept( this, offset, false );
@@ -176,6 +241,7 @@ public class CodeGenerator implements AbsynVisitor {
         }               
     }
 
+    //edit
     public void visit( IntExp exp, int offset, boolean isAddr ) {
 
     }
@@ -184,12 +250,14 @@ public class CodeGenerator implements AbsynVisitor {
 
     }
 
+    //add editComment
     public void visit( OpExp exp, int offset, boolean isAddr ) {
 
         exp.left.accept( this, offset, false );
         exp.right.accept( this, offset, false );
     }
 
+    //add editComment
     public void visit (ReturnExp exp, int offset, boolean isAddr ) {
 
         exp.exp.accept(this, offset+1, false);
@@ -200,6 +268,7 @@ public class CodeGenerator implements AbsynVisitor {
         exp.variable.accept(this, offset+1, false);
     }
 
+    //edit
     public void visit (WhileExp exp, int offset, boolean isAddr ) {
 
         exp.test.accept(this, offset+1, false);
