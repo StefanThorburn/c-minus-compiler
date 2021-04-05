@@ -7,6 +7,9 @@ Our parser uses the provided sample scanner and parser as a base
 ***** CHECKPOINT TWO *****
 Symbol Table and Type Checking
 
+***** CHECKPOINT THREE *****
+Assembly Code Generation
+
 *** RUNNING ***
 In root directory, type 'make'
 
@@ -17,9 +20,9 @@ Run scanner only in root directory with
     'java -cp ./lib/cup.jar:./bin/ Scanner < input_file'
 
 Run parser in root directory with
-    'java -cp ./lib/cup.jar:./bin/ Main input_file [-s] [-a]'
+    'java -cp ./lib/cup.jar:./bin/ Main input_file [-s] [-a] [-c]'
     or
-    'bash ./cm.sh input_file [-a] [-s]'
+    'bash ./cm.sh input_file [-a] [-s] [-c]'
 
 Type make clean to remove generated files.
 
