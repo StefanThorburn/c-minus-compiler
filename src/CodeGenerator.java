@@ -1,26 +1,32 @@
 import absyn.*;
 
+// constructor for initialization and all emitting routines
 public class CodeGenerator implements AbsynVisitor {
     private int IADDR_SIZE = 1024;
     private int DADDR_SIZE = 1024;
     private int NO_REGS = 8;
     private int PC_REG = 7;
-    public static int mainEntry = 0;
-    public static int globalOffset = 0;
-    // constructor for initialization and all emitting routines
 
     //predifined registers
-	public static int pc = 7;
-	public static int gp = 6;
-	public static int fp = 5;
-	public static int ac = 0;
-	public static int ac1 = 1;
+	public static final int ac = 0;
+	public static final int ac1 = 1;
+    public static final int fp = 5;
+    public static final int gp = 6;
+    public static final int pc = 7;
+    public static final int ofpOF = 0;
+    public static final int retOF = -1;
+    public static final int initOF = -1;
 
-    public static int emitLoc= 0;
-    public static int highEmitLoc= 0;
+    private static int mainEntry;
+    private static int globalOffset; 
+    private static int emitLoc;
+    private static int highEmitLoc;
 
     public CodeGenerator() {
-        
+        mainEntry = 0;
+        globalOffset = 0;
+        emitLoc = 0;
+        highEmitLoc = 0;
     }
     
     public static int emitSkip( int distance ) {
@@ -101,37 +107,34 @@ public class CodeGenerator implements AbsynVisitor {
     public static void finale(PrintStream console)
     {
           //Printing finale
-          emitRM("ST", fp, globalOffset+ofpFO, fp, "push ofp");
+          emitRM("ST", fp, globalOffset+ ofpOF, fp, "push ofp");
           emitRM("LDA", fp, globalOffset, fp, "push frame");
           emitRM_Abs("LDA", pc, entry, "jump to main loc");
-          emitRM("LD", fp, ofpFO, fp, "pop frame");
+          emitRM("LD", fp, ofpOF, fp, "pop frame");
           emitComment("end of execution.");
           emitRO("HALT", 0, 0, 0, "");
           //reset to stdout
           System.setOut(console); //Reset output to terminal
     }
 
-
-
-
-    /*
-    public void visit(Absyntrees) {   // wrapper for post-order traversal
+    /* 
+    // wrapper method for post-order traversal
+    public void visit(Absyntrees) {   
         // generate the prelude
         
         // generate the i/o routines
         
         // call the visit method for DecList
+       
         visit(trees, 0, false);
-        // generate finale
         
+        //check if "main" is given
+        // if 0, output message , terminate
+        
+        // generate finale     
     }
 
-    // implement all visit methods in AbsynVisitor
-    public void visit(DecListdecs, int offset, Boolean isAddress) {
-             
-    }
     */
-        //...
 
     // Visit methods are currently all stubs except traversal is maintained.
     // The offset values sent in 'accept' calls are not necessarily correct currently -- they are just copied from the ShowTreeVisitor for indentation.
