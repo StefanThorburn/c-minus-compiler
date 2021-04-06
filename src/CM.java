@@ -57,7 +57,7 @@ class CM {
       PrintStream console = System.out;
 
       parser p = new parser(new Lexer(new FileReader(INPUT_FILE)));
-      // implement "-a" and "-s" options
+      // implement "-a", "-s", "-c" options
       Absyn result = (Absyn)(p.parse().value);  
       
       if (result != null) {

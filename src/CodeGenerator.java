@@ -8,7 +8,7 @@ public class CodeGenerator implements AbsynVisitor {
     private int PC_REG = 7;        
 
     //predefined register numbers
-	public static final int  ac = 0;
+	public static final int ac = 0;
     public static final int ac1 = 1;
     public static final int fp = 5;
     public static final int gp = 6;
@@ -132,7 +132,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitRO("HALT", 0, 0, 0, "");
           
     }
-
 
     //Wrapper function for tree visit, generates boilerplate code like setup and finale
     public void visit (Absyn decs, String fileName) {
