@@ -130,8 +130,8 @@ class CM {
 
             //Perform code generation
             CodeGenerator generatorVisitor = new CodeGenerator();
-            result.accept(generatorVisitor, 0, false);
-          //generatorVisitor.visit(result);
+            //result.accept(generatorVisitor, 0, false);
+            generatorVisitor.visit(result, FILE_NAME + ".tm");
             
           }      
         }
