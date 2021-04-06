@@ -4,26 +4,34 @@ public class CodeGenerator implements AbsynVisitor {
     private int IADDR_SIZE = 1024;
     private int DADDR_SIZE = 1024;
     private int NO_REGS = 8;
-    private int PC_REG = 7;
-    public static int mainEntry = 0;
-    public static int globalOffset = 0;
+    private int PC_REG = 7;        
+
+    //predefined register numbers
+	public static final int  ac = 0;
+    public static final int ac1 = 1;
+    public static final int fp = 5;
+    public static final int gp = 6;
+    public static final int pc = 7;
+    public static final int ofpFO = 0;
+    public static final int retFO = -1;
+    public static final int initFO = -2;
+
+    // instance variables
+    private int emitLoc;
+    private int highEmitLoc;
+    private int mainEntry;
+    private int globalOffset;
+
     // constructor for initialization and all emitting routines
 
-    //predifined registers
-	public static int pc = 7;
-	public static int gp = 6;
-	public static int fp = 5;
-	public static int ac = 0;
-	public static int ac1 = 1;
-
-    public static int emitLoc= 0;
-    public static int highEmitLoc= 0;
-
     public CodeGenerator() {
-        
+        mainEntry = 0;
+        globalOffset = 0;
+        emitLoc = 0;
+        highEmitLoc = 0;    
     }
     
-    public static int emitSkip( int distance ) {
+    public int emitSkip( int distance ) {
         int i = emitLoc;
         emitLoc += distance;
 
@@ -33,86 +41,119 @@ public class CodeGenerator implements AbsynVisitor {
         return i;
     }
     
-    public static void emitBackup( int loc) {
+    public void emitBackup( int loc) {
         if( loc > highEmitLoc)
             emitComment( "BUG in emitBackup" );
         emitLoc = loc;
     }
 
-    public static void emitRestore() {
+    public void emitRestore() {
         emitLoc = highEmitLoc;
     }
     
-    public static void emitRM_Abs( String op, int r, int a, String c ) {
-        System.out.println(emitLoc + ": " + op + " " + r + ", " + (a - (emitLoc + 1)) + "(" + pc + ") \t" + c);
-        ++emitLoc;
+    public void emitRM_Abs( String op, int r, int a, String c ) {
+        //System.out.println(emitLoc + ": " + op + " " + r + ", " + (a - (emitLoc + 1)) + "(" + pc + ") \t" + c);
+
+        //Formatted output for the RM instruction
+        System.out.printf("%3d: %6s %d,%3d(%d)\t\t%s%n", emitLoc, op, r, a - (emitLoc + 1), pc, c);
+
+        emitLoc++;
 
         if( highEmitLoc < emitLoc)
             highEmitLoc = emitLoc;
     }
     
-    public static void emitComment(String c)
+    public void emitComment(String c)
 	{
 		System.out.println("* " + c);
 	}
 
-    public static void emitRM(String op, int r1, int offset, int r2, String c) {
-		System.out.println(emitLoc + ": " + op + " " + r1 + ", " + offset + "(" + r2 + ") \t" + c);
-        ++emitLoc;
+    // Print a register-memory instruction
+    public void emitRM(String op, int r1, int offset, int r2, String c) {
+		//System.out.println(emitLoc + ": " + op + " " + r1 + ", " + offset + "(" + r2 + ") \t" + c);
+        //Formatted output for the RM instruction
+        System.out.printf("%3d: %6s %d,%3d(%d)\t\t%s%n", emitLoc, op, r1, offset, r2, c);
+
+        emitLoc++;
 
 		if (highEmitLoc < emitLoc)
 			highEmitLoc = emitLoc;
 	}
 
-	public static void emitRO(String op, int r1, int r2, int r3, String c){
-		System.out.println(emitLoc + ": " + op + " " + r1 + ", " + r2 + ", " + r3 + " \t" + c);
-        ++emitLoc;
+    // Print a registers only instruction
+	public void emitRO(String op, int r1, int r2, int r3, String c){
+		//System.out.println(emitLoc + ": " + op + " " + r1 + ", " + r2 + ", " + r3 + " \t" + c);
+
+        //Formatted output for the RO instruction
+        System.out.printf("%3d: %6s %d,%d,%d\t\t\t%s%n", emitLoc, op, r1, r2, r3, c);
+
+        emitLoc++;
 
 		if (highEmitLoc < emitLoc)
 			highEmitLoc = emitLoc;
 	}
 
-    public static void prelude(String fileName)
+    public void prelude(String fileName)
     {
-          //Printing prelude
-          emitComment("C-Minus Compilation to TM Code");
-          emitComment("File: " + fileName);
-          emitComment("Standard prelude:");
-          emitRM("LD", 6, 0, 0, "load gp with maxaddr");
-          emitRM("LDA", 5, 0, 6, "Copy gp to fp");
-          emitRM("ST", 0, 0, 0, "Clear content at loc");
-          int savedLoc = emitSkip(1);
-          emitComment("Jump around i/o routines here");
-          emitComment("code for input routine");
-          emitRM("ST", 0, -1, 5, "store return");
-          emitRO("IN", 0, 0, 0, "input");
-          emitRM("LD", 7, -1, 5, "return to caller");
-          emitComment("code for output routine");
-          emitRM("ST", 0, -1, 5, "store return");
-          emitRM("ST", 0,-1,5, "load output value");
-          emitRO("OUT", 0, 0, 0, "output");
-          emitRM("LD", 7, -1, 5, "return to caller");
-          emitBackup(savedLoc);
-          emitRM("LDA", 7, 7, 7, "jump around i/o code");
-          emitRestore();
-          emitComment("End of standard prelude");
+        //Printing prelude
+        emitComment("C-Minus Compilation to TM Code");
+        emitComment("File: " + fileName);
+        emitComment("Standard prelude:");
+        emitRM("LD", 6, 0, 0, "load gp with maxaddr");
+        emitRM("LDA", 5, 0, 6, "Copy gp to fp");
+        emitRM("ST", 0, 0, 0, "Clear content at loc");
+        int savedLoc = emitSkip(1);
+        
+        //Printing predefined input/output functions        
+        emitComment("Jump around i/o routines here");
+        emitComment("code for input routine");
+        emitRM("ST", 0, -1, 5, "store return");
+        emitRO("IN", 0, 0, 0, "input");
+        emitRM("LD", 7, -1, 5, "return to caller");
+        emitComment("code for output routine");
+        emitRM("ST", 0, -1, 5, "store return");
+        emitRM("ST", 0,-1,5, "load output value");
+        emitRO("OUT", 0, 0, 0, "output");
+        emitRM("LD", 7, -1, 5, "return to caller");
+        emitBackup(savedLoc);
+        emitRM("LDA", 7, 7, 7, "jump around i/o code");
+        emitRestore();
+        emitComment("End of standard prelude");
     }
 
-    public static void finale(PrintStream console)
+    public void finale()
     {
-          //Printing finale
-          emitRM("ST", fp, globalOffset+ofpFO, fp, "push ofp");
-          emitRM("LDA", fp, globalOffset, fp, "push frame");
-          emitRM_Abs("LDA", pc, entry, "jump to main loc");
-          emitRM("LD", fp, ofpFO, fp, "pop frame");
-          emitComment("end of execution.");
-          emitRO("HALT", 0, 0, 0, "");
-          //reset to stdout
-          System.setOut(console); //Reset output to terminal
+        emitComment("start of finale");
+        //Printing finale
+        emitRM("ST", fp, globalOffset+ofpFO, fp, "push ofp");
+        emitRM("LDA", fp, globalOffset, fp, "push frame");
+        emitRM("LDA", ac, 1, pc, "load ac with ret ptr");
+        emitRM_Abs("LDA", pc, mainEntry, "jump to main loc");
+        emitRM("LD", fp, ofpFO, fp, "pop frame");
+        emitComment("end of execution.");
+        emitRO("HALT", 0, 0, 0, "");
+          
     }
 
 
+    //Wrapper function for tree visit, generates boilerplate code like setup and finale
+    public void visit (Absyn decs, String fileName) {
+        
+        prelude(fileName);
 
+        //Traverse the tree
+        visit((DecList)decs, 0, false);
+
+        // If main is not provided (mainEntry will be 0) then terminate execution
+        // Then stop execution
+        /*if (mainEntry == 0) {
+            System.err.println("No reference to 'main' function. Aborting code generation.");
+            System.exit(-1);
+        }*/
+
+        //Print finale code at the end
+        finale();
+    }
 
     /*
     public void visit(Absyntrees) {   // wrapper for post-order traversal
@@ -125,13 +166,8 @@ public class CodeGenerator implements AbsynVisitor {
         // generate finale
         
     }
-
-    // implement all visit methods in AbsynVisitor
-    public void visit(DecListdecs, int offset, Boolean isAddress) {
-             
-    }
     */
-        //...
+
 
     // Visit methods are currently all stubs except traversal is maintained.
     // The offset values sent in 'accept' calls are not necessarily correct currently -- they are just copied from the ShowTreeVisitor for indentation.
