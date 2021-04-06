@@ -53,8 +53,7 @@ public class CodeGenerator implements AbsynVisitor {
     }
     
     public void emitRM_Abs( String op, int r, int a, String c ) {
-        //System.out.println(emitLoc + ": " + op + " " + r + ", " + (a - (emitLoc + 1)) + "(" + pc + ") \t" + c);
-
+       
         //Formatted output for the RM instruction
         System.out.printf("%3d: %6s %d,%3d(%d)\t\t%s%n", emitLoc, op, r, a - (emitLoc + 1), pc, c);
 
@@ -71,7 +70,6 @@ public class CodeGenerator implements AbsynVisitor {
 
     // Print a register-memory instruction
     public void emitRM(String op, int r1, int offset, int r2, String c) {
-		//System.out.println(emitLoc + ": " + op + " " + r1 + ", " + offset + "(" + r2 + ") \t" + c);
         //Formatted output for the RM instruction
         System.out.printf("%3d: %6s %d,%3d(%d)\t\t%s%n", emitLoc, op, r1, offset, r2, c);
 
@@ -83,7 +81,6 @@ public class CodeGenerator implements AbsynVisitor {
 
     // Print a registers only instruction
 	public void emitRO(String op, int r1, int r2, int r3, String c){
-		//System.out.println(emitLoc + ": " + op + " " + r1 + ", " + r2 + ", " + r3 + " \t" + c);
 
         //Formatted output for the RO instruction
         System.out.printf("%3d: %6s %d,%d,%d\t\t\t%s%n", emitLoc, op, r1, r2, r3, c);
@@ -155,24 +152,6 @@ public class CodeGenerator implements AbsynVisitor {
         //Print finale code at the end
         finale();
     }
-
-    /*
-    public void visit(Absyntrees) {   // wrapper for post-order traversal
-        // generate the prelude
-        
-        // generate the i/o routines
-        
-        // call the visit method for DecList
-       
-        visit(trees, 0, false);
-        
-        //check if "main" is given
-        // if 0, output message , terminate
-        
-        // generate finale     
-    }
-    */
-
 
     // Visit methods are currently all stubs except traversal is maintained.
     // The offset values sent in 'accept' calls are not necessarily correct currently -- they are just copied from the ShowTreeVisitor for indentation.
