@@ -325,9 +325,15 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("-> if");
  
         exp.test.accept( this, offset, false );
+        int savedLoc = emitSkip(1);
         exp.thenpart.accept( this, offset +1, false);
+        int savedLoc2 = emitSkip(0);
+        emitBackup(savedLoc);
+        emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
+        emitRestore();
 
         if (exp.elsepart != null ) {
+            emitComment("if: jump to else belongs here");
             exp.elsepart.accept( this, offset +1, false);
         } 
         
@@ -338,6 +344,12 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit( IntExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> constant");
+
+        try{
+            emitRM("LDC", ac, exp.value, 0, "load const");
+        } catch (Exception e){
+      
+        }
 
         emitComment("<- constant");
 
@@ -379,9 +391,25 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("-> while");
         emitComment("while: jump after body comes back here");
 
-        exp.test.accept(this, offset+1, false);
-        exp.body.accept(this, offset+1, false);
+        int savedLoc = emitSkip(0);
 
+        if(exp.test != null) {
+            exp.test.accept(this, offset+1, false);
+            emitComment("while: jump to end belongs here");
+        }
+        
+        int savedLoc2 = emitSkip(1);
+
+        if(exp.body != null) {
+            exp.body.accept(this, offset+1, false);
+        }
+
+        emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
+        int savedLoc3 = emitSkip(0);
+        emitBackup(savedLoc2);
+        emitRM_Abs("JEQ", 0, savedLoc3, "while: jump to end");
+        emitRestore();
+        
         emitComment("<- while");
     }
 }
