@@ -168,7 +168,11 @@ public class CodeGenerator implements AbsynVisitor {
     //add editComment
     public void visit (IndexVar var, int offset, boolean isAddr ) {
 
+        emitComment("-> subs");
+
         var.index.accept( this, offset + 1, false);
+
+        emitComment("<- subs");
     }
 
     public void visit (SimpleVar var, int offset, boolean isAddr ) {
@@ -194,6 +198,9 @@ public class CodeGenerator implements AbsynVisitor {
     
     //edit
     public void visit (FunctionDec functionDec, int offset, boolean isAddr ) {
+
+        emitComment("Processing function: " + functionDec.name);
+        emitComment("jump around function body here");
 
         //The location of the next instruction becomes the function address
         functionDec.funcAddress = emitLoc;
@@ -270,23 +277,33 @@ public class CodeGenerator implements AbsynVisitor {
     //edit
     public void visit( AssignExp exp, int offset, boolean isAddr ) {
 
+        emitComment("-> op");
+
         if (exp.lhs != null) {
             exp.lhs.accept( this, offset, false );
         }
         
         exp.rhs.accept( this, offset, false );
+
+        emitComment("<- op");
     }
 
     //edit
     public void visit (CallExp exp, int offset, boolean isAddr ) {
 
+        emitComment("-> call of function: " + exp.func);
+
         if (exp.args != null && exp.args.head != null) {
             exp.args.accept(this, offset, false);
         }    
+
+        emitComment("<- call");
     }
     
     //edit
     public void visit (CompoundExp compoundList, int offset, boolean isAddr ) {
+
+        emitComment("-> compound statement");
    
         if (compoundList.decs != null) {
             compoundList.decs.accept( this, offset+1, false );
@@ -294,6 +311,8 @@ public class CodeGenerator implements AbsynVisitor {
         if (compoundList.exps != null) {
             compoundList.exps.accept( this, offset+1, false );
         }    
+
+        emitComment("<- compound statement");
     }    
 
     public void visit (ErrorExp compoundList, int offset, boolean isAddr ) {
@@ -302,17 +321,25 @@ public class CodeGenerator implements AbsynVisitor {
 
     //edit
     public void visit( IfExp exp, int offset, boolean isAddr ) {
+
+        emitComment("-> if");
  
         exp.test.accept( this, offset, false );
         exp.thenpart.accept( this, offset +1, false);
 
         if (exp.elsepart != null ) {
             exp.elsepart.accept( this, offset +1, false);
-        }               
+        } 
+        
+        emitComment("<- if");
     }
 
     //edit
     public void visit( IntExp exp, int offset, boolean isAddr ) {
+
+        emitComment("-> constant");
+
+        emitComment("<- constant");
 
     }
 
@@ -323,14 +350,22 @@ public class CodeGenerator implements AbsynVisitor {
     //add editComment
     public void visit( OpExp exp, int offset, boolean isAddr ) {
 
+        emitComment("-> op");
+
         exp.left.accept( this, offset, false );
         exp.right.accept( this, offset, false );
+
+        emitComment("<- op");
     }
 
     //add editComment
     public void visit (ReturnExp exp, int offset, boolean isAddr ) {
 
+        emitComment("-> return");
+
         exp.exp.accept(this, offset+1, false);
+
+        emitComment("<- return");
     }  
 
     public void visit( VarExp exp, int offset, boolean isAddr ) {
@@ -341,8 +376,13 @@ public class CodeGenerator implements AbsynVisitor {
     //edit
     public void visit (WhileExp exp, int offset, boolean isAddr ) {
 
+        emitComment("-> while");
+        emitComment("while: jump after body comes back here");
+
         exp.test.accept(this, offset+1, false);
         exp.body.accept(this, offset+1, false);
+
+        emitComment("<- while");
     }
 }
 
