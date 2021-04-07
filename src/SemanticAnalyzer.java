@@ -272,8 +272,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   public void visit (SimpleVar var, int level, boolean isAddr ) {
     SimpleDec simpleDec;
-    simpleDec = (SimpleDec) lookup(var.name, false, var.row, var.col);
-    var.associatedDec = simpleDec;
+    System.err.println(var.name + ": " + var.row + ", " + var.col);
+    var.associatedDec = lookup(var.name, false, var.row, var.col);
   }
 
   public void visit (ArrayDec array, int level, boolean isAddr ) {

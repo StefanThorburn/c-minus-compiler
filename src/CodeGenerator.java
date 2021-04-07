@@ -19,7 +19,7 @@ public class CodeGenerator implements AbsynVisitor {
 
     //other miscellaneous constants
     private static final int SIZE_OF_INT = 1;
-    private static final int GLOBAL_SCOPE = 1;
+    private static final int GLOBAL_SCOPE = 0;
 
     // instance variables
     private int emitLoc;
@@ -210,6 +210,13 @@ public class CodeGenerator implements AbsynVisitor {
     //edit
     public void visit (SimpleDec dec, int offset, boolean isAddr ) {
         dec.offset = offset;
+
+        if (dec.nestLevel == GLOBAL_SCOPE) {
+            emitComment("processing global simple var: " + dec.name);
+        }
+        else {
+            emitComment("processing local simple var: " + dec.name);
+        }
     }  
 
     public void visit (DecList decList, int offset, boolean isAddr ) {
