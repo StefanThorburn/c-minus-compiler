@@ -257,12 +257,13 @@ public class SemanticAnalyzer implements AbsynVisitor {
       printError(var.index.row, var.index.col, "array index must be of type INT");      
     }  
 
-    IntExp intExp;
-    ArrayDec arrayDec;
+    ArrayDec arrayDec;    
+    arrayDec = (ArrayDec) lookup(var.name, false, var.row, var.col);
+    var.associatedDec = arrayDec;
 
     if (var.index instanceof IntExp) {
-      intExp = (IntExp) var.index;
-      arrayDec = (ArrayDec) lookup(var.name, false, var.row, var.col);
+      IntExp intExp = (IntExp) var.index;
+
       if(!(intExp.value < arrayDec.size.value) && (intExp.value > 0)){
         printError(var.index.row, var.index.col, "array index is out of bounds");
       }
@@ -270,10 +271,21 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit (SimpleVar var, int level, boolean isAddr ) {
-
+    SimpleDec simpleDec;
+    simpleDec = (SimpleDec) lookup(var.name, false, var.row, var.col);
+    var.associatedDec = simpleDec;
   }
 
   public void visit (ArrayDec array, int level, boolean isAddr ) {
+
+    //Set the declaration's nest level to local or global as appropriate
+    if (level > GLOBAL_SCOPE) {
+      array.nestLevel = 1;
+    }
+    else {
+      array.nestLevel = 0;
+    }
+
     insert(array, level);
 
   }
@@ -300,6 +312,14 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   public void visit (SimpleDec dec, int level, boolean isAddr ) {
+
+    //Set the declaration's nest level to local or global as appropriate
+    if (level > GLOBAL_SCOPE) {
+      dec.nestLevel = 1;
+    }
+    else {
+      dec.nestLevel = 0;
+    }
 
     //Don't insert a declaration into the symbol table in the case of func (void)
     if (dec.name != null && dec.type.type != NameTy.VOID) {
@@ -374,8 +394,12 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }    
 
     Dec lookupDec = lookup(exp.func, true, exp.row, exp.col);
+    exp.dType = lookupDec;
+
     if (lookupDec instanceof FunctionDec) {
       FunctionDec funcDec = (FunctionDec) lookupDec;
+      exp.dType = funcDec;
+
       ExpList callArgs = exp.args;
       VarDecList expectedArgs = funcDec.params;
       int numCall = 0;
@@ -409,9 +433,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
         printError(exp.row, exp.col, "Incorrect number of arguments for function '" + funcDec.name + "'. Expected " + funcDec.numArguments + ", got " + numCall);
       }
 
-    }    
-
-    exp.dType = lookupDec;
+    }        
   }
   
   public void visit (CompoundExp compoundList, int level, boolean isAddr ) {

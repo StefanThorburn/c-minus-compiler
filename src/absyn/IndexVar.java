@@ -8,6 +8,7 @@ public class IndexVar extends Var {
       this.col = col;
       this.name = name;
       this.index = index;
+      this.associatedDec = null;
    }
 
    public void accept( AbsynVisitor visitor, int level, boolean isAddr ) {

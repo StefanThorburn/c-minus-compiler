@@ -17,6 +17,10 @@ public class CodeGenerator implements AbsynVisitor {
     public static final int retFO = -1;
     public static final int initFO = -2;
 
+    //other miscellaneous constants
+    private static final int SIZE_OF_INT = 1;
+    private static final int GLOBAL_SCOPE = 1;
+
     // instance variables
     private int emitLoc;
     private int highEmitLoc;
@@ -94,34 +98,36 @@ public class CodeGenerator implements AbsynVisitor {
 			highEmitLoc = emitLoc;
 	}
 
+    //Generate all prelude code which is the same format for every program
     public void prelude(String fileName)
     {
         //Printing prelude
         emitComment("C-Minus Compilation to TM Code");
         emitComment("File: " + fileName);
         emitComment("Standard prelude:");
-        emitRM("LD", 6, 0, 0, "load gp with maxaddr");
-        emitRM("LDA", 5, 0, 6, "Copy gp to fp");
+        emitRM("LD", gp, 0, 0, "load gp with maxaddr");
+        emitRM("LDA", fp, 0, gp, "Copy gp to fp");
         emitRM("ST", 0, 0, 0, "Clear content at loc");
         int savedLoc = emitSkip(1);
         
         //Printing predefined input/output functions        
         emitComment("Jump around i/o routines here");
         emitComment("code for input routine");
-        emitRM("ST", 0, -1, 5, "store return");
+        emitRM("ST", 0, -1, fp, "store return");
         emitRO("IN", 0, 0, 0, "input");
-        emitRM("LD", 7, -1, 5, "return to caller");
+        emitRM("LD", pc, -1, fp, "return to caller");
         emitComment("code for output routine");
-        emitRM("ST", 0, -1, 5, "store return");
-        emitRM("ST", 0,-1,5, "load output value");
+        emitRM("ST", 0, -1, fp, "store return");
+        emitRM("LD", 0,-2,fp, "load output value");
         emitRO("OUT", 0, 0, 0, "output");
-        emitRM("LD", 7, -1, 5, "return to caller");
+        emitRM("LD", pc, -1, fp, "return to caller");
         emitBackup(savedLoc);
-        emitRM("LDA", 7, 7, 7, "jump around i/o code");
+        emitRM("LDA", pc, 7, pc, "jump around i/o code");
         emitRestore();
         emitComment("End of standard prelude");
     }
 
+    //Generate finale code which follows the same format for every program
     public void finale()
     {
         emitComment("start of finale");
@@ -135,7 +141,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitRO("HALT", 0, 0, 0, "");
           
     }
-
 
     //Wrapper function for tree visit, generates boilerplate code like setup and finale
     public void visit (Absyn decs, String fileName) {
@@ -156,24 +161,6 @@ public class CodeGenerator implements AbsynVisitor {
         finale();
     }
 
-    /*
-    public void visit(Absyntrees) {   // wrapper for post-order traversal
-        // generate the prelude
-        
-        // generate the i/o routines
-        
-        // call the visit method for DecList
-       
-        visit(trees, 0, false);
-        
-        //check if "main" is given
-        // if 0, output message , terminate
-        
-        // generate finale     
-    }
-    */
-
-
     // Visit methods are currently all stubs except traversal is maintained.
     // The offset values sent in 'accept' calls are not necessarily correct currently -- they are just copied from the ShowTreeVisitor for indentation.
 
@@ -193,7 +180,7 @@ public class CodeGenerator implements AbsynVisitor {
 
     //edit
     public void visit (ArrayDec array, int offset, boolean isAddr ) {
-
+        array.offset = offset;
     }
 
     public void visit (ErrorDec compoundList, int offset, boolean isAddr ) {
@@ -203,13 +190,18 @@ public class CodeGenerator implements AbsynVisitor {
     //edit
     public void visit (FunctionDec functionDec, int offset, boolean isAddr ) {
 
+        //The location of the next instruction becomes the function address
+        functionDec.funcAddress = emitLoc;
+
         functionDec.params.accept(this, offset, false);
-        functionDec.body.accept(this, offset, false);
+        //The parameters will be integers or addresses (which are also integers)
+        //The offsets for any declarations in the body will start after the parameters
+        functionDec.body.accept(this, offset - (functionDec.numArguments * SIZE_OF_INT), false);
     }
 
     //edit
     public void visit (SimpleDec dec, int offset, boolean isAddr ) {
-
+        dec.offset = offset;
     }  
 
     public void visit (DecList decList, int offset, boolean isAddr ) {
@@ -220,9 +212,34 @@ public class CodeGenerator implements AbsynVisitor {
         } 
     }
 
+    //In a variable declaration list, visit each of the declarations, updating the offset accordingly
     public void visit (VarDecList decList, int offset, boolean isAddr ) {
 
         while( decList != null ) {
+            //Iterate over variable declarations, decrementing the offset for each one
+            if (decList.head instanceof SimpleDec) {
+                //For a simple integer, decrease the offset by just the size of one integer
+                offset = offset - (1 * SIZE_OF_INT);
+
+                if (decList.head.nestLevel == GLOBAL_SCOPE) {
+                    //In case of global declarations, decrement global offset as well
+                    globalOffset = globalOffset - (1 * SIZE_OF_INT);
+                }
+            }
+            else { //It is an array dec (since at the point of CodeGeneration we know it is error free)
+
+                //Decrease the offset based on the number of elements in the array
+                offset = offset - (((ArrayDec) decList.head).size.value * SIZE_OF_INT);
+                //Decrease by an additional element to store the size of the array
+                offset = offset - (1 * SIZE_OF_INT);
+
+                if (decList.head.nestLevel == GLOBAL_SCOPE) {
+                    //In case of global declarations, decrement global offset as well
+                    globalOffset = globalOffset - (((ArrayDec) decList.head).size.value * SIZE_OF_INT);
+                    globalOffset = globalOffset - (1 * SIZE_OF_INT);
+                }
+            }
+
             decList.head.accept( this, offset, false );
             decList = decList.tail;
         } 

@@ -6,6 +6,7 @@ public class SimpleVar extends Var {
       this.row = row;
       this.col = col;
       this.name = name;
+      this.associatedDec = null;
    }
 
    public void accept( AbsynVisitor visitor, int level, boolean isAddr ) {

@@ -5,6 +5,8 @@ public class FunctionDec extends Dec {
    public VarDecList params;
    public CompoundExp body;
    public int numArguments;
+   //Records the start address of the corresponding function
+   public int funcAddress;
 
    public FunctionDec (int row, int col, NameTy type, String name, VarDecList params, CompoundExp body) {
       this.row = row;
@@ -14,6 +16,8 @@ public class FunctionDec extends Dec {
       this.params = params;
       this.body = body;
       this.numArguments = 0;
+
+      this.funcAddress = -1;
 
       //Compute the necessary number of arguments to the function
       while (params != null) {
