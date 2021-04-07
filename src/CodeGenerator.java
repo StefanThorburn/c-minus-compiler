@@ -180,6 +180,14 @@ public class CodeGenerator implements AbsynVisitor {
 
     //edit
     public void visit (ArrayDec array, int offset, boolean isAddr ) {
+
+        if (array.nestLevel == GLOBAL_SCOPE) {
+            emitComment("processing global array var: " + array.name);
+        }
+        else {
+            emitComment("processing local array var: " + array.name);
+        }
+
         array.offset = offset;
     }
 
