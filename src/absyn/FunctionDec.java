@@ -33,7 +33,7 @@ public class FunctionDec extends Dec {
    }
 
    public void accept( AbsynVisitor visitor, int level, boolean isAddr ) {
-      visitor.visit( this, level, false );
+      visitor.visit( this, level, isAddr );
    }
 
    public String toString() {
