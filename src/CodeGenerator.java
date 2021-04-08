@@ -202,13 +202,36 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("Processing function: " + functionDec.name);
         emitComment("jump around function body here");
 
+        //Save the current instruction location for backpatching the function jump
+        int savedLoc = emitSkip(1);
+
         //The location of the next instruction becomes the function address
         functionDec.funcAddress = emitLoc;
+
+        //For the main function, keep special track of its location
+        if (functionDec.name.toLowerCase().equals("main")) {
+            mainEntry = functionDec.funcAddress;
+        }
+
+        //Move the return address stored in ac to the ret-address location (located right after ofp)
+        emitRM("ST", ac, retFO, fp, "move return address from ac to retFO");
+
+        //TODO: Store parameters
 
         functionDec.params.accept(this, offset, false);
         //The parameters will be integers or addresses (which are also integers)
         //The offsets for any declarations in the body will start after the parameters
         functionDec.body.accept(this, offset - (functionDec.numArguments * SIZE_OF_INT), false);
+
+        // At the end of the function, return to the caller
+        emitRM("LD", pc, retFO, fp, "return to caller");
+
+        //At this point, all instructions have been printed for the function and we know how far to jump
+        //So complete the backpatching for the jump around the function
+        int savedLoc2 = emitSkip(0);
+        emitBackup(savedLoc);
+        emitRM_Abs("LDA", pc, savedLoc2, "jump around " + functionDec.name + " function");
+        emitRestore();
     }
 
     //edit
@@ -319,21 +342,21 @@ public class CodeGenerator implements AbsynVisitor {
 
     }    
 
-    //edit
+    //TODO: Implement assignment and op expressions, then reimplement control structure
     public void visit( IfExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> if");
- 
+
         exp.test.accept( this, offset, false );
-        int savedLoc = emitSkip(1);
+        //int savedLoc = emitSkip(1);
         exp.thenpart.accept( this, offset +1, false);
-        int savedLoc2 = emitSkip(0);
-        emitBackup(savedLoc);
-        emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
-        emitRestore();
+        //int savedLoc2 = emitSkip(0);
+        //emitBackup(savedLoc);
+        //emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
+        //emitRestore();
 
         if (exp.elsepart != null ) {
-            emitComment("if: jump to else belongs here");
+            //emitComment("if: jump to else belongs here");
             exp.elsepart.accept( this, offset +1, false);
         } 
         
@@ -385,30 +408,30 @@ public class CodeGenerator implements AbsynVisitor {
         exp.variable.accept(this, offset+1, false);
     }
 
-    //edit
+    //TODO: Implement assignment and op expressions, then reimplement control structure
     public void visit (WhileExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> while");
         emitComment("while: jump after body comes back here");
 
-        int savedLoc = emitSkip(0);
+        //int savedLoc = emitSkip(0);
 
         if(exp.test != null) {
             exp.test.accept(this, offset+1, false);
             emitComment("while: jump to end belongs here");
         }
         
-        int savedLoc2 = emitSkip(1);
+        //int savedLoc2 = emitSkip(1);
 
         if(exp.body != null) {
             exp.body.accept(this, offset+1, false);
         }
 
-        emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
+        /*emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
         int savedLoc3 = emitSkip(0);
         emitBackup(savedLoc2);
         emitRM_Abs("JEQ", 0, savedLoc3, "while: jump to end");
-        emitRestore();
+        emitRestore();*/
         
         emitComment("<- while");
     }
