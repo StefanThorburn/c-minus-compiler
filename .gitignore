@@ -9,6 +9,7 @@ sym.java
 *.abs
 *.sym
 *.tm
+tm
 TMSimulator/tm
 !TMSimulator/*.tm
 

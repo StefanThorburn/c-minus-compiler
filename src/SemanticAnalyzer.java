@@ -28,10 +28,14 @@ public class SemanticAnalyzer implements AbsynVisitor {
     // void output(int)
     int dummyPos = -1;
     VarDecList inputParams = new VarDecList(new SimpleDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.VOID), null), null);
-    Dec inputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.INT), "input", inputParams, null);
-
+    FunctionDec inputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.INT), "input", inputParams, null);
+    
     VarDecList outputParams = new VarDecList(new SimpleDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.INT), "outputValue"), null);
-    Dec outputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.VOID), "output", outputParams, null);
+    FunctionDec outputDec = new FunctionDec(dummyPos, dummyPos, new NameTy(dummyPos, dummyPos, NameTy.VOID), "output", outputParams, null);
+
+    //Hard-coded values based on prelude being the same for every program
+    inputDec.funcAddress = 4;
+    outputDec.funcAddress = 7;
 
     insert (inputDec, GLOBAL_SCOPE);
     insert(outputDec, GLOBAL_SCOPE);
@@ -272,7 +276,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
   public void visit (SimpleVar var, int level, boolean isAddr ) {
     SimpleDec simpleDec;
-    var.associatedDec = lookup(var.name, false, var.row, var.col);
+    var.associatedDec = (VarDec) lookup(var.name, false, var.row, var.col);
   }
 
   public void visit (ArrayDec array, int level, boolean isAddr ) {

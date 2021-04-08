@@ -149,10 +149,10 @@ public class CodeGenerator implements AbsynVisitor {
 
         // If main is not provided (mainEntry will be 0) then terminate execution
         // Then stop execution
-        /*if (mainEntry == 0) {
+        if (mainEntry == 0) {
             System.err.println("No reference to 'main' function. Aborting code generation.");
             System.exit(-1);
-        }*/
+        }
 
         //Print finale code at the end
         finale();
@@ -170,13 +170,24 @@ public class CodeGenerator implements AbsynVisitor {
 
         emitComment("-> subs");
 
-        var.index.accept( this, offset + 1, false);
+        var.index.accept( this, offset, isAddr);
 
         emitComment("<- subs");
     }
 
     public void visit (SimpleVar var, int offset, boolean isAddr ) {
 
+        //If the simple var is an address (e.g. used as LHS of an assignment)
+        if (isAddr == true) {
+            //Compute the address of the variable
+            emitRM("LDA", ac, var.associatedDec.offset, fp, "compute address of var " + var.name);
+            emitRM("ST", ac, offset, fp, "store address in frame offset");
+        }
+        else {
+            //The simple var appears as part of a computation
+            emitRM("LD", ac, var.associatedDec.offset, fp, "save value of var " + var.name);
+            emitRM("ST", ac, offset, fp, "store value in frame offset");
+        }
     }
 
     //edit
@@ -200,8 +211,7 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit (FunctionDec functionDec, int offset, boolean isAddr ) {
 
         emitComment("Processing function: " + functionDec.name);
-        emitComment("jump around function body here");
-
+                
         //Save the current instruction location for backpatching the function jump
         int savedLoc = emitSkip(1);
 
@@ -216,7 +226,8 @@ public class CodeGenerator implements AbsynVisitor {
         //Move the return address stored in ac to the ret-address location (located right after ofp)
         emitRM("ST", ac, retFO, fp, "move return address from ac to retFO");
 
-        //TODO: Store parameters
+        // Reduce the offset to leave space for the book-keeping information
+        offset = offset - 2;
 
         functionDec.params.accept(this, offset, false);
         //The parameters will be integers or addresses (which are also integers)
@@ -228,6 +239,7 @@ public class CodeGenerator implements AbsynVisitor {
 
         //At this point, all instructions have been printed for the function and we know how far to jump
         //So complete the backpatching for the jump around the function
+        emitComment("jump around function body here");
         int savedLoc2 = emitSkip(0);
         emitBackup(savedLoc);
         emitRM_Abs("LDA", pc, savedLoc2, "jump around " + functionDec.name + " function");
@@ -300,15 +312,21 @@ public class CodeGenerator implements AbsynVisitor {
     //edit
     public void visit( AssignExp exp, int offset, boolean isAddr ) {
 
-        emitComment("-> op");
+        emitComment("-> assign");
+        emitComment("Assign offset is: " + offset);
 
         if (exp.lhs != null) {
-            exp.lhs.accept( this, offset, false );
+            exp.lhs.accept( this, offset - 1, true );
         }
         
-        exp.rhs.accept( this, offset, false );
+        exp.rhs.accept( this, offset - 2, false );
 
-        emitComment("<- op");
+        emitRM("LD", ac, offset - 1, fp, "load assignment lhs");
+        emitRM("LD", ac, offset - 2, fp, "load assignment rhs");
+        emitRM("ST", ac1, ac, ac, "");
+        emitRM("ST", ac1, offset, fp, "store result of assignment");
+
+        emitComment("<- assign");
     }
 
     //edit
@@ -316,9 +334,28 @@ public class CodeGenerator implements AbsynVisitor {
 
         emitComment("-> call of function: " + exp.func);
 
+        //TODO evaluate and store arguments
         if (exp.args != null && exp.args.head != null) {
             exp.args.accept(this, offset, false);
         }    
+
+        int funcAddress = 0;
+
+        if (exp.dType instanceof FunctionDec) {
+            funcAddress = ((FunctionDec) exp.dType).funcAddress;
+        }   
+        else {
+            //This shouldn't ever happen since the code should be syntactically valid at this point
+            //But it's here just in case to prevent a ClassCastException crashing the program
+            System.err.println("Something went wrong calling function " + exp.dType.name + " at row " + exp.row + ", col " + exp.col);
+        }   
+
+        //After storing arguments, store the current frame pointer
+        emitRM("ST", fp, offset+ofpFO, fp, "store current fp");
+        emitRM("LDA", fp, offset, fp, "push frame");
+        emitRM("LDA", ac, 1, pc, "load ac with ret ptr");
+        emitRM_Abs("LDA", pc, funcAddress, "jump to " + exp.dType.name + " loc");
+        emitRM("LD", fp, ofpFO, fp, "pop frame");        
 
         emitComment("<- call");
     }
@@ -329,10 +366,10 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("-> compound statement");
    
         if (compoundList.decs != null) {
-            compoundList.decs.accept( this, offset+1, false );
+            compoundList.decs.accept( this, offset, false );
         }
         if (compoundList.exps != null) {
-            compoundList.exps.accept( this, offset+1, false );
+            compoundList.exps.accept( this, offset, false );
         }    
 
         emitComment("<- compound statement");
@@ -349,7 +386,7 @@ public class CodeGenerator implements AbsynVisitor {
 
         exp.test.accept( this, offset, false );
         //int savedLoc = emitSkip(1);
-        exp.thenpart.accept( this, offset +1, false);
+        exp.thenpart.accept( this, offset, false);
         //int savedLoc2 = emitSkip(0);
         //emitBackup(savedLoc);
         //emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
@@ -357,7 +394,7 @@ public class CodeGenerator implements AbsynVisitor {
 
         if (exp.elsepart != null ) {
             //emitComment("if: jump to else belongs here");
-            exp.elsepart.accept( this, offset +1, false);
+            exp.elsepart.accept( this, offset, false);
         } 
         
         emitComment("<- if");
@@ -369,9 +406,12 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("-> constant");
 
         try{
+            //Load the constant into ac
             emitRM("LDC", ac, exp.value, 0, "load const");
+            emitRM("ST", ac, offset, fp, "");
+
         } catch (Exception e){
-      
+            System.err.println("Something went wrong when loading value at line " + exp.row + ", col " + exp.col);
         }
 
         emitComment("<- constant");
@@ -386,11 +426,51 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit( OpExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> op");
+        
+        exp.left.accept( this, offset - 1, false );
+        exp.right.accept( this, offset - 2, false );
 
-        exp.left.accept( this, offset, false );
-        exp.right.accept( this, offset, false );
+        emitRM("LD", ac, offset - 1, fp, "load left operand");
+        emitRM("LD", ac1, offset - 2, fp, "load right operand");
+
+        //Perform the required operation
+        //For arithmetic operations, perform "ac OP ac1" and store in ac
+        switch ( exp.op ) {
+            case OpExp.PLUS:
+                emitRO("ADD", ac, ac, ac1, "perform add operation");
+                break;
+            case OpExp.MINUS:
+                emitRO("SUB", ac, ac, ac1, "perform subtract operation");
+                break;
+            case OpExp.MUL:
+                emitRO("MUL", ac, ac, ac1, "perform multiply operation");
+                break;
+            case OpExp.DIV:
+                emitRO("DIV", ac, ac, ac1, "perform division operation");
+                break;
+            case OpExp.LT:
+                //TODO
+                break;
+            case OpExp.LE:
+                //TODO
+                break;
+            case OpExp.GT:
+                //TODO
+                break;
+            case OpExp.GE:
+                //TODO
+                break;
+            case OpExp.EQ:
+                //TODO
+                break;
+            case OpExp.NE:
+                //TODO
+                break;
+        }        
 
         emitComment("<- op");
+        //After performing the operation, store it in the result location
+        emitRM("ST", ac, offset, fp, "store op result");
     }
 
     //add editComment
@@ -398,14 +478,14 @@ public class CodeGenerator implements AbsynVisitor {
 
         emitComment("-> return");
 
-        exp.exp.accept(this, offset+1, false);
+        exp.exp.accept(this, offset, false);
 
         emitComment("<- return");
     }  
 
     public void visit( VarExp exp, int offset, boolean isAddr ) {
 
-        exp.variable.accept(this, offset+1, false);
+        exp.variable.accept(this, offset, isAddr);
     }
 
     //TODO: Implement assignment and op expressions, then reimplement control structure
@@ -417,14 +497,14 @@ public class CodeGenerator implements AbsynVisitor {
         //int savedLoc = emitSkip(0);
 
         if(exp.test != null) {
-            exp.test.accept(this, offset+1, false);
+            exp.test.accept(this, offset, false);
             emitComment("while: jump to end belongs here");
         }
         
         //int savedLoc2 = emitSkip(1);
 
         if(exp.body != null) {
-            exp.body.accept(this, offset+1, false);
+            exp.body.accept(this, offset, false);
         }
 
         /*emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
@@ -436,4 +516,3 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("<- while");
     }
 }
-
