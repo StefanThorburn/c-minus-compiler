@@ -386,21 +386,20 @@ public class CodeGenerator implements AbsynVisitor {
 
     }    
 
-    //TODO: Implement assignment and op expressions, then reimplement control structure
     public void visit( IfExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> if");
 
         exp.test.accept( this, offset, false );
-        //int savedLoc = emitSkip(1);
+        int savedLoc = emitSkip(1);
         exp.thenpart.accept( this, offset, false);
-        //int savedLoc2 = emitSkip(0);
-        //emitBackup(savedLoc);
-        //emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
-        //emitRestore();
+        int savedLoc2 = emitSkip(0);
+        emitBackup(savedLoc);
+        emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
+        emitRestore();
 
         if (exp.elsepart != null ) {
-            //emitComment("if: jump to else belongs here");
+            emitComment("if: jump to else belongs here");
             exp.elsepart.accept( this, offset, false);
         } 
         
@@ -516,30 +515,29 @@ public class CodeGenerator implements AbsynVisitor {
         exp.variable.accept(this, offset, isAddr);
     }
 
-    //TODO: Implement assignment and op expressions, then reimplement control structure
     public void visit (WhileExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> while");
         emitComment("while: jump after body comes back here");
 
-        //int savedLoc = emitSkip(0);
+        int savedLoc = emitSkip(0);
 
         if(exp.test != null) {
             exp.test.accept(this, offset, false);
             emitComment("while: jump to end belongs here");
         }
         
-        //int savedLoc2 = emitSkip(1);
+        int savedLoc2 = emitSkip(1);
 
         if(exp.body != null) {
             exp.body.accept(this, offset, false);
         }
 
-        /*emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
+        emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
         int savedLoc3 = emitSkip(0);
         emitBackup(savedLoc2);
         emitRM_Abs("JEQ", 0, savedLoc3, "while: jump to end");
-        emitRestore();*/
+        emitRestore();
         
         emitComment("<- while");
     }
