@@ -230,8 +230,8 @@ public class CodeGenerator implements AbsynVisitor {
         //Move the return address stored in ac to the ret-address location (located right after ofp)
         emitRM("ST", ac, retFO, fp, "move return address from ac to retFO");
 
-        // Reduce the offset to leave space for the book-keeping information
-        offset = offset - 2;
+        // Adjust the offset to leave space for the book-keeping information
+        offset = offset + initFO;
 
         functionDec.params.accept(this, offset, false);
         //The parameters will be integers or addresses (which are also integers)
@@ -308,11 +308,21 @@ public class CodeGenerator implements AbsynVisitor {
         offsetTemp = offset;
     }
 
-    public void visit( ExpList expList, int offset, boolean isAddr ) {
+    public void visit( ExpList expList, int offset, boolean isCallExp ) {
 
         if (expList.head != null) {
-            while( expList != null ) {
+            while( expList != null ) {                
+
                 expList.head.accept( this, offset, false );
+
+                //In the case of a function call, store the results of the expression for use by the function
+                if (isCallExp) {
+                    //Store result
+                    emitRM("ST", ac, offset + initFO, fp, "store parameter");
+                    //Adjust offset for the rest of the parameters
+                    offset = offset - (1 * SIZE_OF_INT);
+                }
+                //Move onto the next expression
                 expList = expList.tail;
             } 
         }    
@@ -342,19 +352,19 @@ public class CodeGenerator implements AbsynVisitor {
 
         //TODO evaluate and store arguments
         if (exp.args != null && exp.args.head != null) {
-            exp.args.accept(this, offset, false);
-        }    
+            exp.args.accept(this, offset, true);
+        }            
 
-        int funcAddress = 0;
-
-        if (exp.dType instanceof FunctionDec) {
-            funcAddress = ((FunctionDec) exp.dType).funcAddress;
-        }   
-        else {
+        if (!(exp.dType instanceof FunctionDec)) {
             //This shouldn't ever happen since the code should be syntactically valid at this point
             //But it's here just in case to prevent a ClassCastException crashing the program
             System.err.println("Something went wrong calling function " + exp.dType.name + " at row " + exp.row + ", col " + exp.col);
+            System.exit(-1);            
         }   
+
+        FunctionDec associatedFunc = (FunctionDec) exp.dType;
+        int funcAddress = associatedFunc.funcAddress;
+
 
         //After storing arguments, store the current frame pointer
         emitRM("ST", fp, offset+ofpFO, fp, "store current fp");
@@ -362,6 +372,14 @@ public class CodeGenerator implements AbsynVisitor {
         emitRM("LDA", ac, 1, pc, "load ac with ret ptr");
         emitRM_Abs("LDA", pc, funcAddress, "jump to " + exp.dType.name + " loc");
         emitRM("LD", fp, ofpFO, fp, "pop frame");        
+
+        //Check the function's return type -- if it's not void, store it
+        if (associatedFunc.type.type != NameTy.VOID) {
+            //Store a non-void return at the current offset
+            //Assume the result was placed in ac
+            emitRM("ST", ac, offset, fp, "store returned value from " + associatedFunc.name);
+        }
+
 
         emitComment("<- call");
     }
