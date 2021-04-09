@@ -27,6 +27,8 @@ public class CodeGenerator implements AbsynVisitor {
     private int mainEntry;
     private int globalOffset;
 
+    private int offsetTemp;
+
     // constructor for initialization and all emitting routines
 
     public CodeGenerator() {
@@ -34,6 +36,7 @@ public class CodeGenerator implements AbsynVisitor {
         globalOffset = 0;
         emitLoc = 0;
         highEmitLoc = 0;    
+        offsetTemp = 0;
     }
     
     public int emitSkip( int distance ) {
@@ -177,6 +180,8 @@ public class CodeGenerator implements AbsynVisitor {
 
     public void visit (SimpleVar var, int offset, boolean isAddr ) {
 
+        System.err.println(var.row + ", " + var.col + ". Associated dec:" + var.associatedDec.offset + ", offset: " + offset);
+
         //If the simple var is an address (e.g. used as LHS of an assignment)
         if (isAddr == true) {
             //Compute the address of the variable
@@ -270,6 +275,8 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit (VarDecList decList, int offset, boolean isAddr ) {
 
         while( decList != null ) {
+            decList.head.accept( this, offset, false );
+
             //Iterate over variable declarations, decrementing the offset for each one
             if (decList.head instanceof SimpleDec) {
                 //For a simple integer, decrease the offset by just the size of one integer
@@ -294,9 +301,12 @@ public class CodeGenerator implements AbsynVisitor {
                 }
             }
 
-            decList.head.accept( this, offset, false );
+            // Move to the next declaration
             decList = decList.tail;
         } 
+
+        //Set a temporary offset variable so it can be retrieved in a CompoundExp
+        offsetTemp = offset;
     }
 
     public void visit( ExpList expList, int offset, boolean isAddr ) {
@@ -322,7 +332,7 @@ public class CodeGenerator implements AbsynVisitor {
         exp.rhs.accept( this, offset - 2, false );
 
         emitRM("LD", ac, offset - 1, fp, "load assignment lhs");
-        emitRM("LD", ac, offset - 2, fp, "load assignment rhs");
+        emitRM("LD", ac1, offset - 2, fp, "load assignment rhs");
         emitRM("ST", ac1, ac, ac, "");
         emitRM("ST", ac1, offset, fp, "store result of assignment");
 
@@ -367,6 +377,8 @@ public class CodeGenerator implements AbsynVisitor {
    
         if (compoundList.decs != null) {
             compoundList.decs.accept( this, offset, false );
+            //Adjust offset based on any declarations that were made
+            offset = offsetTemp;
         }
         if (compoundList.exps != null) {
             compoundList.exps.accept( this, offset, false );
