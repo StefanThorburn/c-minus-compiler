@@ -180,7 +180,6 @@ public class CodeGenerator implements AbsynVisitor {
 
     public void visit (SimpleVar var, int offset, boolean isAddr ) {
 
-        System.err.println(var.row + ", " + var.col + ". Associated dec:" + var.associatedDec.offset + ", offset: " + offset);
 
         //If the simple var is an address (e.g. used as LHS of an assignment)
         if (isAddr == true) {
@@ -322,7 +321,6 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit( AssignExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> assign");
-        emitComment("Assign offset is: " + offset);
 
         if (exp.lhs != null) {
             exp.lhs.accept( this, offset - 1, true );
