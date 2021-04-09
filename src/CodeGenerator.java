@@ -215,6 +215,7 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit (FunctionDec functionDec, int offset, boolean isAddr ) {
 
         emitComment("Processing function: " + functionDec.name);
+        emitComment("jump around function body here");
                 
         //Save the current instruction location for backpatching the function jump
         int savedLoc = emitSkip(1);
@@ -242,8 +243,7 @@ public class CodeGenerator implements AbsynVisitor {
         emitRM("LD", pc, retFO, fp, "return to caller");
 
         //At this point, all instructions have been printed for the function and we know how far to jump
-        //So complete the backpatching for the jump around the function
-        emitComment("jump around function body here");
+        //So complete the backpatching for the jump around the function        
         int savedLoc2 = emitSkip(0);
         emitBackup(savedLoc);
         emitRM_Abs("LDA", pc, savedLoc2, "jump around " + functionDec.name + " function");
@@ -254,12 +254,15 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit (SimpleDec dec, int offset, boolean isAddr ) {
         dec.offset = offset;
 
-        if (dec.nestLevel == GLOBAL_SCOPE) {
-            emitComment("processing global simple var: " + dec.name);
-        }
-        else {
-            emitComment("processing local simple var: " + dec.name);
-        }
+        //Don't bother printing for the 'void' in e.g. int func (void)
+        if (dec.name != null) {
+            if (dec.nestLevel == GLOBAL_SCOPE) {
+                emitComment("processing global simple var: " + dec.name);
+            }
+            else {
+                emitComment("processing local simple var: " + dec.name);
+            }
+        }        
     }  
 
     public void visit (DecList decList, int offset, boolean isAddr ) {
@@ -493,7 +496,7 @@ public class CodeGenerator implements AbsynVisitor {
                 break;
             case OpExp.GE:
                 emitRO("SUB", ac, 1, ac, "OP >=");
-                emitRM("JLE", ac, 2, pc, "");
+                emitRM("JGE", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
                 emitRM("LDC", ac, 1, 0, "true case");
