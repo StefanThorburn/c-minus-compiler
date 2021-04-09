@@ -309,7 +309,6 @@ public class CodeGenerator implements AbsynVisitor {
         }    
     }  
 
-    //edit
     public void visit( AssignExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> assign");
@@ -329,7 +328,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("<- assign");
     }
 
-    //edit
     public void visit (CallExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> call of function: " + exp.func);
@@ -360,7 +358,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("<- call");
     }
     
-    //edit
     public void visit (CompoundExp compoundList, int offset, boolean isAddr ) {
 
         emitComment("-> compound statement");
@@ -400,7 +397,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("<- if");
     }
 
-    //edit
     public void visit( IntExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> constant");
@@ -422,7 +418,6 @@ public class CodeGenerator implements AbsynVisitor {
 
     }
 
-    //add editComment
     public void visit( OpExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> op");
@@ -449,22 +444,46 @@ public class CodeGenerator implements AbsynVisitor {
                 emitRO("DIV", ac, ac, ac1, "perform division operation");
                 break;
             case OpExp.LT:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP <");
+                emitRM("JLT", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.LE:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP <=");
+                emitRM("JLE", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GT:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP >");
+                emitRM("JGT", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GE:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP >=");
+                emitRM("JLE", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.EQ:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP ==");
+                emitRM("JEQ", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.NE:
-                //TODO
+                emitRO("SUB", ac, 1, ac, "OP !=");
+                emitRM("JNE", ac, 2, pc, "");
+                emitRM("LDC", ac, 0, 0, "false case");
+                emitRM("LDA", pc, 1, pc, "unconditional jump");
+                emitRM("LDC", ac, 1, 0, "true case");
                 break;
         }        
 
@@ -473,7 +492,6 @@ public class CodeGenerator implements AbsynVisitor {
         emitRM("ST", ac, offset, fp, "store op result");
     }
 
-    //add editComment
     public void visit (ReturnExp exp, int offset, boolean isAddr ) {
 
         emitComment("-> return");
