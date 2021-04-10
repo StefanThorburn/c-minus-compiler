@@ -474,42 +474,46 @@ public class CodeGenerator implements AbsynVisitor {
                 emitRO("DIV", ac, ac, ac1, "perform division operation");
                 break;
             case OpExp.LT:
-                emitRO("SUB", ac, 1, ac, "OP <");
+                //Perform subtraction to determine if result is positive, negative, or 0
+                emitRO("SUB", ac, ac, ac1, "OP <");
+                //If the jump condition is satisfied, jump to the true case
                 emitRM("JLT", ac, 2, pc, "");
+                //Otherwise, perform the false case (setting value to 0)
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
+                //In true case, set value of ac to 1
                 emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.LE:
-                emitRO("SUB", ac, 1, ac, "OP <=");
+                emitRO("SUB", ac, ac, ac1, "OP <=");
                 emitRM("JLE", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
                 emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GT:
-                emitRO("SUB", ac, 1, ac, "OP >");
+                emitRO("SUB", ac, ac, ac1, "OP >");
                 emitRM("JGT", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
                 emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GE:
-                emitRO("SUB", ac, 1, ac, "OP >=");
+                emitRO("SUB", ac, ac, ac1, "OP >=");
                 emitRM("JGE", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
                 emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.EQ:
-                emitRO("SUB", ac, 1, ac, "OP ==");
+                emitRO("SUB", ac, ac, ac1, "OP ==");
                 emitRM("JEQ", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
                 emitRM("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.NE:
-                emitRO("SUB", ac, 1, ac, "OP !=");
+                emitRO("SUB", ac, ac, ac1, "OP !=");
                 emitRM("JNE", ac, 2, pc, "");
                 emitRM("LDC", ac, 0, 0, "false case");
                 emitRM("LDA", pc, 1, pc, "unconditional jump");
