@@ -413,7 +413,7 @@ public class CodeGenerator implements AbsynVisitor {
 
         exp.test.accept( this, offset, false );
         int savedLoc = emitSkip(1);
-        exp.thenpart.accept( this, offset, false);
+        exp.thenpart.accept( this, offset - 1 , false);
         int savedLoc2 = emitSkip(0);
         emitBackup(savedLoc);
         emitRM_Abs("JEQ", 0, savedLoc2, "if: jump to else part");
@@ -421,7 +421,7 @@ public class CodeGenerator implements AbsynVisitor {
 
         if (exp.elsepart != null ) {
             emitComment("if: jump to else belongs here");
-            exp.elsepart.accept( this, offset, false);
+            exp.elsepart.accept( this, offset - 1, false);
         } 
         
         emitComment("<- if");
@@ -551,7 +551,7 @@ public class CodeGenerator implements AbsynVisitor {
         int savedLoc2 = emitSkip(1);
 
         if(exp.body != null) {
-            exp.body.accept(this, offset, false);
+            exp.body.accept(this, offset - 1, false);
         }
 
         emitRM_Abs("LDA", pc, savedLoc, "while: absolute jump to test");
