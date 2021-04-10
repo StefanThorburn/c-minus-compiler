@@ -321,7 +321,7 @@ public class CodeGenerator implements AbsynVisitor {
                 //In the case of a function call, store the results of the expression for use by the function
                 if (isCallExp) {
                     //Store result
-                    emitRM("ST", ac, offset + initFO, fp, "store parameter");
+                    emitRM("ST", ac, offset, fp, "store parameter");
                     //Adjust offset for the rest of the parameters
                     offset = offset - (1 * SIZE_OF_INT);
                 }
@@ -353,9 +353,9 @@ public class CodeGenerator implements AbsynVisitor {
 
         emitComment("-> call of function: " + exp.func);
 
-        //TODO evaluate and store arguments
+        //Evaluate and store arguments, beginning at the initial offset 
         if (exp.args != null && exp.args.head != null) {
-            exp.args.accept(this, offset, true);
+            exp.args.accept(this, offset + initFO, true);
         }            
 
         if (!(exp.dType instanceof FunctionDec)) {
@@ -382,7 +382,6 @@ public class CodeGenerator implements AbsynVisitor {
             //Assume the result was placed in ac
             emitRM("ST", ac, offset, fp, "store returned value from " + associatedFunc.name);
         }
-
 
         emitComment("<- call");
     }
