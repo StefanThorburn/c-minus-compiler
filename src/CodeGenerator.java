@@ -531,6 +531,8 @@ public class CodeGenerator implements AbsynVisitor {
         emitComment("-> return");
 
         exp.exp.accept(this, offset, false);
+        //Return to caller
+        emitRM("LD", pc, retFO, fp, "return to caller");
 
         emitComment("<- return");
     }  
