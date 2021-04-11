@@ -1,0 +1,17 @@
+/* Demonstrates some control structures 
+Prints all numbers from 0 to 100*/
+
+void main (void) {
+     int tens;
+     tens = 0;
+
+     while (tens < 10) {
+          int ones;
+          ones = 0;
+          while (ones <= 10) {
+               output(10*tens + ones);
+               ones = ones + 1;
+          }
+          tens = tens + 1;
+     }
+}

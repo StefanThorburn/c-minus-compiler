@@ -1,0 +1,73 @@
+/*
+Errors in this file:
+- Complex return statement checking -- returnsProperly always returns, but missingReturn doesn't
+- Variable redeclaration
+- Undefined reference
+- Type mismatch in function call arguments
+- Number of arguments mismatch in function call
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
+
+void main(void) {
+    int x;
+    int x;
+    x = 3;
+    if( x )
+    output(foo());
+    if(foo()) output(x,foo());
+
+    y = 10;
+}
+
+int returnsProperly (void) {
+    int x;
+    int y;
+    x = 2;
+    y = 15;
+
+    if (x == 3) {
+        return 17 + 2;
+    }
+    else {
+        if (x > 4) {
+            if (y == 5) {
+                return 15;
+            }
+            else {
+                return 12;
+            }
+        }
+        else {
+            return 5;
+        }
+    }
+}
+
+int missingReturn (void) {
+    int x;
+    int y;
+    x = 2;
+    y = 15;
+
+    if (x == 3) {
+        return 17 + 2;
+    }
+    else {
+        if (x > 4) {
+            if (y == 5) {
+                return 15;
+            }
+            else {
+                return 12;
+            }
+        }
+        else {
+            x = x + 5;
+        }
+    }
+}

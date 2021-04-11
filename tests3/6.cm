@@ -1,0 +1,25 @@
+/*
+Checks that two things are the same type:
+- match two operands
+ -match two sides of an assignment
+ - else without corresponding 'if'
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
+
+int fun(int fff ) {
+     int x; 
+     int y;
+     x = x * 2 + 1;
+     y = x + foo();
+
+     x = foo();
+
+     else x = x + 3;
+     
+     return y;
+}

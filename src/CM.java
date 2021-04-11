@@ -56,17 +56,19 @@ class CM {
       // Save original stdout to switch back to it as needed
       PrintStream console = System.out;
 
+      if (!SHOW_SYM_TABLES && !SHOW_TREE && !GENERATE_CODE) {
+        System.out.println("Showing errors only.");
+        System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n" 
+                          + "Use [-s] flag to print the symbol table" + "\n"
+                          + "Use [-c] to generate assembly code (.tm)");          
+      }  
+
       parser p = new parser(new Lexer(new FileReader(INPUT_FILE)));
       // implement "-a", "-s", "-c" options
       Absyn result = (Absyn)(p.parse().value);  
       
       if (result != null) {
-        if (!SHOW_SYM_TABLES && !SHOW_TREE && !GENERATE_CODE) {
-          System.out.println("Showing errors only.");
-          System.out.println("Use [-a] flag to print the abstract syntax tree" + "\n" 
-                            + "Use [-s] flag to print the symbol table" + "\n"
-                            + "Use [-c] to generate assembly code (.tm)");          
-        }      
+            
         // If the '-a' flag is set, print the abstract syntax tree to a .abs file
         if (SHOW_TREE) {
           System.out.println("Abstract syntax tree written to '" + FILE_NAME + ".abs'");

@@ -1,0 +1,21 @@
+/* A program to demonstrate nested blocks 
+expected output is 12, 10, 17 */
+
+void main(void) {
+   int x;
+   x = 2;
+   if (x > 0) {
+      int t;
+      t = 10;
+      x = x + t;
+      output(x);
+      output(t);
+   }
+
+   { 
+      int y;
+      y = 5;
+      x = x + y;
+   }
+   output(x);
+}

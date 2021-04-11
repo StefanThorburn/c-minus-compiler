@@ -1,0 +1,39 @@
+/*
+Errors (in order):
+- Variable of type 'void'
+In main:
+- Attempting to assign to constant '3'
+- int frog > 5; -- can't have an expression as var name
+- Loop condition is not a valid expression
+- Attempt to access an invalid array index
+In gcd:
+- outer if has invalid condition
+*/
+
+int globalVar;
+void badGlobalVar;
+
+int gcd(int u, int v) {
+    if (u == int var + 3) {
+        if (v == 0) return u;
+        else return gcd(v, u - u/v*v);
+    }
+}
+
+void main (void) {
+    int frog;
+    int frogs[10];
+    int cat;
+
+    frog = 3;
+    cat = 5;
+    5 = 15 / frog;
+    int frog > 5;    
+
+    while (frog < 6 < 2) {
+        frog = frog + 1;        
+    } 
+    
+    frogs[0] = frog + 1;
+    frogs[cat] = gcd(frog, 14);
+}

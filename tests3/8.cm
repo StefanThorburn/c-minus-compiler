@@ -1,0 +1,40 @@
+/*
+array range/index must be int
+In this situation, foo returns void. a then attempts to access an index with that result
+
+For simple index accesses, array index accessed 
+must be greater than 0 and less than the max size of the array
+
+Also, function arguments must match in number and type -- e.g. foo expects 0. funone expects 2 of type int
+*/
+
+void foo (void) {
+    int x;
+    x = 3;
+    output(x);
+}
+
+void funOne (int x, int y) {
+    int z;
+    z = x + y;
+}
+
+void main(void) { 
+    int a[2];  
+    int x; 
+    void var;
+
+    x = 0;
+    a[x] = 1;    
+    a[foo()] = 2;
+
+    foo(x);
+    foo(var);
+    
+    funOne();
+    funOne(x);
+    funOne(x, var);
+    funOne(x, a[1]);
+
+    a[5] = 12;
+}

@@ -261,21 +261,19 @@ public class SemanticAnalyzer implements AbsynVisitor {
       printError(var.index.row, var.index.col, "array index must be of type INT");      
     }  
 
-    ArrayDec arrayDec;    
-    arrayDec = (ArrayDec) lookup(var.name, false, var.row, var.col);
-    var.associatedDec = arrayDec;
+    var.associatedDec = (VarDec) lookup(var.name, false, var.row, var.col);
 
-    if (var.index instanceof IntExp) {
+    if (var.index instanceof IntExp && var.associatedDec instanceof ArrayDec) {
       IntExp intExp = (IntExp) var.index;
 
-      if(!(intExp.value < arrayDec.size.value) && (intExp.value > 0)){
+      if(!(intExp.value < ((ArrayDec) var.associatedDec).size.value) && (intExp.value > 0)){
         printError(var.index.row, var.index.col, "array index is out of bounds");
       }
+      
     }
   }
 
   public void visit (SimpleVar var, int level, boolean isAddr ) {
-    SimpleDec simpleDec;
     var.associatedDec = (VarDec) lookup(var.name, false, var.row, var.col);
   }
 
