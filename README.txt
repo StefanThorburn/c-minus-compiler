@@ -1,14 +1,20 @@
 CIS4650 W21 Compiler's project
 Prabhleen Ratra & Stefan Thorburn
 
+A compiler for the simplified C language known as C- (or C--) -- specification is located in the docs folder.
+Developement was divided into 3 phases or checkpoints.
+
 ***** CHECKPOINT ONE *****
-Our parser uses the provided sample scanner and parser as a base
+- Scan input code into tokens
+- Parse tokens according to specification grammar into a parse tree
+- Perform some syntactic error checking
 
 ***** CHECKPOINT TWO *****
-Symbol Table and Type Checking
+- Create a symbol table and perform type checking / semantic error checking.
+- Create an annotated parse tree
 
 ***** CHECKPOINT THREE *****
-Assembly Code Generation
+- Generate executable assembly code from the annotated parse tree, runnable on the included TMSimulator.
 
 *** RUNNING ***
 In root directory, type 'make'
@@ -26,4 +32,8 @@ Run parser in root directory with
 
 Type make clean to remove generated files.
 
-Note that all commands are configured for the school linux server and some won't work on e.g. windows powershell
+Note that all commands are configured for the school linux server and some won't work on e.g. windows powershell.
+Additionally, the included cup.jar file is a shortcut to CUP installed on the school server and will not work outside that environment.
+
+*** KNOWN ISSUES ***
+- No assembly code is generated for array functionality (memory is allocated correctly, but storing/retrieving values from arrays were not implemented due to time constraints)
