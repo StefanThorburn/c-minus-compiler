@@ -37,3 +37,4 @@ Additionally, the included cup.jar file is a shortcut to CUP installed on the sc
 
 *** KNOWN ISSUES ***
 - No assembly code is generated for array functionality (memory is allocated correctly, but storing/retrieving values from arrays were not implemented due to time constraints)
+- Assembly code generation is not at all optimized as this was out of scope of the project.
