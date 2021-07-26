@@ -1,8 +1,8 @@
 CIS4650 W21 Compiler's project
 Prabhleen Ratra & Stefan Thorburn
 
-A compiler for the simplified C language known as C- (or C--) -- specification is located in the docs folder.
-Developement was divided into 3 phases or checkpoints.
+A compiler for the simplified C language known as C- (or C--). The language specification is located in the docs folder.
+Development was divided into 3 phases or checkpoints.
 
 ***** CHECKPOINT ONE *****
 - Scan input code into tokens
